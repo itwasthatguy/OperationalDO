@@ -79,7 +79,7 @@ LastDay = as.Date(commandArgs(trailingOnly = TRUE)[3])
 MainDir = paste0(commandArgs(trailingOnly = TRUE)[4], '\\')
 
 
-FormatDir = paste0(MainDir, '\\24HForecasts\\CSVTFM\\')   #Since the files in here represent the location we want, we can list out all the files to find every lat,lon pair that we want to look at.
+FormatDir = paste0(MainDir, '\\24HForecasts\\CSV\\')   #Since the files in here represent the location we want, we can list out all the files to find every lat,lon pair that we want to look at.
 FormatFiles = list.files(FormatDir)
 FormatLength = length(FormatFiles)
 

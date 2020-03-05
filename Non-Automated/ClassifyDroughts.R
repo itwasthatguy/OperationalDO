@@ -1,0 +1,210 @@
+#Classify Droughts
+
+library(keras)
+library(parallel)
+library(doParallel)
+library(foreach)
+
+ForecastDate = as.Date("2020-01-02")
+IndexCount = (12*2) + 1 + 2 + 2 + 1 + 7  #Not just indices - 12 months of SPI, SPEI + 1 PDI value + Lat/Lon + Year/Month + Ecozone + current and past 6 months of drought. We only use the last month, but previous months could be included as a potential way of separating long and short term drought.
+
+
+#These two groupings should be identical, but training groups could include extra ecozones. For example, we want to classify ecozone N. Ecozone N has very poor training data, so we want to train the classifier with ecozone N and M. We can later train another classifier only on ecozone M for the classification of ecozone M. This allows us to leverage the better training data of ecozone M without degrading the classification of ecozone M.
+TrainGroups = list(c(Spoof), c(Spoof), c(Spoof))
+ClassifyGroups = list(c(Spoof), c(Spoof), c(Spoof))
+
+MainDirectory = 'E:\\Test\\AutomaticDO\\'
+ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\Classifications\\")
+PreviousOutputDir = paste0(MainDirectory, "Outcomes\\Prior\\")
+
+TrainingDataFile = paste0(MainDirectory, 'Historical\\FullTrainingData.csv')
+TrainingData = read.csv(TrainingDataFile)
+
+SPIForecastDir = paste0(MainDirectory, 'Indices\\SPI\\', ForecastDate, '\\')
+SPEIForecastDir = paste0(MainDirectory, 'Indices\\SPEI\\', ForecastDate, '\\')
+PDIForecastDir = paste0(MainDirectory, 'Indices\\PDI\\', ForecastDate, '\\')
+
+SPIForecastDir0 = paste0(SPIForecastDir, '0', '\\')
+SPEIForecastDir0 = paste0(SPEIForecastDir, '0', '\\')
+SPIFormatFiles = list.files(SPIForecastDir0)
+SPEIFormatFiles = list.files(SPEIForecastDir0)
+
+IntFiles = intersect(SPIFormatFiles, SPEIFormatFiles)     #Every index of both forecast types will have these locations
+
+PredictArray = array(0, c(21, length(IntFiles), IndexCount))    #The 21 is for the 21 ensemble members
+
+
+{
+
+cl = makeCluster(40)    #Arbitrary use of 40 threads based off of my CPU's specs. Check yours and pick a number slightly below your core count.
+registerDoParallel(cl)
+
+Out = foreach(Par = 1:40) %dopar% {  #This 40 and the 40s below will need to be changed based on your core count.
+  
+  Lower = floor(((Par - 1) * (length(IntFiles)/40)) + 1)  #Calculate the set of files to be run - saves the thread from having to come back and find out
+  Upper = floor(((Par) * (length(IntFiles)/40)))          #which file to run each time.
+  
+  PredictArraySub = array(0, c(21, length(Lower:Upper), IndexCount))  #A small set of PredictArray with index 2 equal to the file count in this thread
+  
+  for(FileNum in Lower:Upper){
+    File = IntFiles[FileNum]
+    
+    LatLon = unlist(strsplit(File,'.csv'))[1]   #Take the file's geographical location from the file name
+    Lat = unlist(strsplit(LatLon,'_'))[1]
+    Lon = unlist(strsplit(LatLon,'_'))[2]
+    
+    for(Member in 0:20){  #Go through each member and read in, based on the first index, the member specific data
+      
+      SPIForecastDirMem = paste0(SPIForecastDir, Member, '\\')
+      SPEIForecastDirMem = paste0(SPEIForecastDir, Member, '\\')
+      PDIForecastDirMem = paste0(PDIForecastDir, Member, '\\')
+      
+      SPIData = read.table(paste0(SPIForecastDirMem, File), header=FALSE)  #SPI has no header. We want the first 14 cols (Year, month, SPI 1-12)
+      SPEIData = read.csv(paste0(SPEIForecastDirMem, File))    #SPEI and PDI have headers. We want columns 3-14 for SPEI 1-12 (1 and 2 are year, month but we already have that from SPI)
+      PDIData = read.csv(paste0(PDIForecastDirMem, LatLon, '_PDI.csv'))    #We only want column 4 for the PDI value.
+      
+      SPIData = as.matrix(SPIData)[dim(SPIData)[1],1:14]          #Only take the last month, as represented by the first index being equal to the first
+      SPEIData = as.matrix(SPEIData)[dim(SPEIData)[1],3:14]       #index length. The second index represents, for example, the one to twelve month SPI.
+      PDIData = as.matrix(PDIData)[dim(PDIData)[1],4]
+      
+      PredictArraySub[Member+1,FileNum - Lower + 1,1] = Lat
+      PredictArraySub[Member+1,FileNum - Lower + 1,2] = Lon
+      PredictArraySub[Member+1,FileNum - Lower + 1,3:16] = SPIData
+      PredictArraySub[Member+1,FileNum - Lower + 1,17:28] = SPEIData
+      PredictArraySub[Member+1,FileNum - Lower + 1,29] = PDIData
+      
+    }
+    
+  }
+  
+  return(PredictArraySub) #Foreach is a function - return the subset predict array
+}
+
+stopCluster(cl)
+
+#The previous block returned a list of subset predict arrays - arranged in a way that if bound on index 2, they would form a full block of predicted drought indices. The following section steps through each list item and merges them together into PredictArray, which is a singular array.
+
+for(Par in 1:40){
+  Block = Out[[Par]]
+  
+  Lower = floor(((Par - 1) * (length(IntFiles)/40)) + 1)
+  Upper = floor(((Par) * (length(IntFiles)/40)))
+  
+  for(Mem in 1:21){
+    Slice = Block[Mem,,]
+    
+    PredictArray[Mem,Lower:Upper,] = Slice
+    
+  }
+}
+
+DroughtData = read.csv(TestingDroughtFile)
+DroughtData = as.matrix(DroughtData)
+colnames(DroughtData) = NULL
+DroughtData = as.array(DroughtData[,1:ncol(DroughtData)])
+
+for(DroughtLoc in 1:(dim(DroughtData)[1])){
+  Loc = intersect(which(PredictArray[1,,1] == DroughtData[DroughtLoc,2]),which(PredictArray[1,,2] == DroughtData[DroughtLoc,3]))
+  PredictArray[,Loc,30] = DroughtData[DroughtLoc, dim(DroughtData)[2]]
+  PredictArray[,Loc,31] = DroughtData[DroughtLoc, dim(DroughtData)[2] - 1]
+}
+
+
+EcozonesData = read.csv(EcoZonesPath)
+
+for(EcoPoint in 1:dim(EcozonesData)[1]){
+  EcoZonePoint = EcozonesData[EcoPoint,]
+  TrainLocs = intersect(which(TrainArray[,1] == EcoZonePoint[,2]), which(TrainArray[,2] == EcoZonePoint[,3]))
+  
+  PredictLocs = intersect(which(PredictArray[1,,1] == EcoZonePoint[,2]), which(PredictArray[1,,2] == EcoZonePoint[,3]))
+  PredictArray[,PredictLocs, 37] = EcozonesData[EcoPoint,4]
+}
+
+
+TrainMatFull = as.matrix(TrainingData)
+
+#The training data has locations of "not classified" which need to be removed from the training set.
+
+InvalidDrought = vector()
+for(InvalidIter in 0:6){
+  InvalidDrought = union(which(TrainMatFull[,(30 + InvalidIter)] == "6"), InvalidDrought)
+}
+
+TrainMatFull = TrainMatFull[-InvalidDrought,]
+
+class(TrainMatFull) = 'numeric'
+colnames(TrainMatFull) = c('Lat', 'Lon', 'Year', 'Month', 'SPI1', 'SPI2', 'SPI3', 'SPI4', 'SPI5', 'SPI6', 'SPI7', 'SPI8', 'SPI9', 'SPI10', 'SPI11', 'SPI12'  , 'SPEI1', 'SPEI2', 'SPEI3', 'SPEI4', 'SPEI5', 'SPEI6', 'SPEI7', 'SPEI8', 'SPEI9','SPEI10', 'SPEI11', 'SPEI12',  'PDI', 'Drought', 'Drought-1', 'Drought-2', 'Drought-3', 'Drought-4', 'Drought-5', 'Drought-6', 'EcoZone')
+
+}     #Load in all forecasted drought data and indices. If you're in R studio, you can open this section up.
+
+#Now we loop through groupings of ecozones
+
+Counter = 0
+for(TrainGroup in TrainGroups){
+  Counter = Counter + 1
+  ClassifyGroup = ClassifyGroups[[Counter]]
+  
+  TrainMat = TrainMatFull[which(TrainMatFull[,37] %in% TrainGroup),]
+  
+  Samp0 = sample(which(TrainMat[,30] == 0), size = length(which(TrainMat[,30] == 3))*6)
+  Samp1 = sample(which(TrainMat[,30] == 1), size = length(which(TrainMat[,30] == 3))*4)
+  Samp2 = sample(which(TrainMat[,30] == 2), size = length(which(TrainMat[,30] == 3))*2)
+  SubSampleMat = rbind(TrainMat[which(TrainMat[,30] > 2),], TrainMat[Samp2,])
+  SubSampleMat = rbind(SubSampleMat, TrainMat[Samp1,])
+  SubSampleMat = rbind(SubSampleMat, TrainMat[Samp0,])
+  
+  XTrain = as.array(SubSampleMat[,c(4:29,31,37)])
+  XTrain[which(is.infinite(XTrain))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
+  YTrain = as.array(SubSampleMat[,30])
+  class(YTrain) = 'integer'
+  
+  model <- keras_model_sequential() %>%
+    layer_dense(units = 40, activation = 'relu', input_shape = (28)) %>% 
+    layer_dropout(rate=0.2) %>%
+    layer_dense(units = 30, activation = 'relu') %>%
+    layer_dense(units = 6, activation = 'softmax')
+  
+  # Compile model
+  model %>% compile(
+    loss = 'sparse_categorical_crossentropy',
+    optimizer = optimizer_adam(lr = 0.0001, beta_1 = 0.9, beta_2 = 0.999,
+                               epsilon = NULL, decay = 0.00000001, amsgrad = FALSE, clipnorm = NULL,
+                               clipvalue = NULL),
+    metrics = c('accuracy')
+  )
+  
+  # Train model
+  history = model %>% fit(
+    XTrain, YTrain,
+    batch_size = 256,
+    epochs = 500,
+    validation_split = 0.2
+  )
+  
+  for(Mem in 1:21){
+    DataArray = PredictArray[Mem,,]
+    DataArray = DataArray[which(DataArray[,37] %in% ClassifyGroup),]
+    class(DataArray) = 'numeric'
+    
+    XPredict = as.array(DataArray[,c(4:29,31,37)])
+    XPredict[which(is.infinite(XPredict))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
+    YPredict = as.array(DataArray[,30])
+    class(YPredict) = 'integer'
+    
+    Results = predict(model, XPredict)
+    ResultsClass = apply(Results, 1, FUN = which.max) - 1
+    
+    Output = cbind(DataArray[,1], DataArray[,2])
+    Output = cbind(Output, ResultsClass)
+    
+    write.csv(Output, paste0(ClassificationOutputDir, Mem, '_', EcoCount, '.csv'), row.names=FALSE, quote=FALSE)
+    
+    Output = cbind(DataArray[,1], DataArray[,2])
+    Output = cbind(Output, DataArray[,31])
+    
+    write.csv(Output, paste0(PreviousOutputDir, Mem, '_', EcoCount, '.csv'), row.names=FALSE, quote=FALSE)
+    
+  }
+
+  
+}
