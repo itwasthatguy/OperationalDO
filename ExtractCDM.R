@@ -85,4 +85,4 @@ PtsDroughtOut = cbind(PtsTemplate, intCDMVals)
 PtsDroughtOut[,3] = PtsDroughtOut[,3] + 360
 
 dir.create(strOutputDir)
-write.csv(PtsDroughtOut, paste0(strOutputDir, 'CDM.csv'))
+write.csv(PtsDroughtOut, paste0(strOutputDir, 'CDM.csv'), row.names = FALSE)
