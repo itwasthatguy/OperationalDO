@@ -174,12 +174,22 @@ for(Variable in Variables){   #Handle each variable individually to make thing e
     
   } else if(Variable == 'TMP_TGL_2m'){
     
-    Hr192 = ((24 / 3) * 8) -1
-    FileCount = c(seq(1, Hr192), 
-                  seq((Hr192 + 1), Hr192 + 1 + (as.integer(DaysInForecast) - 8) * (24/6) -1))   #Painful to look at
-    
-    TimeCount = c(seq(6, 192,3),
-                  seq(198, (198 + as.integer(DaysInForecast - 8)*24 - 6), 6))
+    if(DaysInForecast > 8){
+      
+      Hr192 = ((24 / 3) * 8) -1
+      FileCount = c(seq(1, Hr192), 
+                    seq((Hr192 + 1), Hr192 + 1 + (as.integer(DaysInForecast) - 8) * (24/6) -1))   #Painful to look at
+      
+      TimeCount = c(seq(6, 192,3),
+                    seq(198, (198 + as.integer(DaysInForecast - 8)*24 - 6), 6))
+      
+    } else {
+      
+      FileCount = 1:(as.integer(DaysInForecast) * (24/3))
+      
+      TimeCount = seq(6, (as.integer(DaysInForecast) * 24)+3, 3)
+      
+    }
     
     TemperatureArray = array(NA, c(360, 181, 21, 8))
     TimeStepCount = 0
