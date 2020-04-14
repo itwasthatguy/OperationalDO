@@ -73,6 +73,7 @@ for(Rep in 1:3){              #It's likely that the network will crap out at som
 
 Week1Array = array(0, c(120,50,14,80,3))      #Lon, lat, day, year/mem - Week 1 needs to contain values for week 3 and 4 so it can compare both
 Week3Array = array(0, c(120,50,7,80,3))      #Lon, lat, day, year/mem
+Week4Array = array(0, c(120,50,7,80,3))      #Lon, lat, day, year/mem
 
 for(Variable in 1:3){
   

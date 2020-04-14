@@ -7,7 +7,7 @@ library(qmap)
 
 clCount = detectCores() - 4
 
-cl = makeCluster(clCount)			
+cl = makeCluster(clCount)		
 registerDoParallel(cl)
 
 
@@ -52,13 +52,6 @@ dir.create(OutDir)
 #              - Lat = Lat Index + 39
 
 #All bias correction calibrations
-
-BCPrecip3 = read.csv(paste0(MainDir, 'Misc\\BiasCorrections\\', ForecastDate, '\\BC_Pcp_3.csv'))
-BCMax3 = read.csv(paste0(MainDir, 'Misc\\BiasCorrections\\', ForecastDate, '\\BC_Max_3.csv'))
-BCMin3 = read.csv(paste0(MainDir, 'Misc\\BiasCorrections\\', ForecastDate, '\\BC_Min_3.csv'))
-BCPrecip4 = read.csv(paste0(MainDir, 'Misc\\BiasCorrections\\', ForecastDate, '\\BC_Pcp_4.csv'))
-BCMax4 = read.csv(paste0(MainDir, 'Misc\\BiasCorrections\\', ForecastDate, '\\BC_Max_4.csv'))
-BCMin4 = read.csv(paste0(MainDir, 'Misc\\BiasCorrections\\', ForecastDate, '\\BC_Min_4.csv'))
 
 Month = as.numeric(format(LastDay, format = "%m"))
 MonthOffset = (Month - 1) * 5
@@ -110,24 +103,7 @@ foreach(j = 1:40) %dopar%{      #Break the data up into 40 chunks and have a cor
       LongTMax = LongMember[(Length+1):(Length*2)] - 273.15       #Kelvin...
       LongTMin = LongMember[((Length*2)+1):(Length*3)] - 273.15
       
-      #Apply bias correction to values at or beyond week 3. If precipitation becomes negative, bring it back to zero.
-      
-      for(ForecastDuration in 1:Length){
-        if(ForecastDuration > 21){
-          LongPrecip[ForecastDuration] = LongPrecip[ForecastDuration] + BCPrecip4[LonMap, LatMap]
-          LongTMax[ForecastDuration] = LongTMax[ForecastDuration] + BCMax4[LonMap, LatMap]
-          LongTMin[ForecastDuration] = LongTMin[ForecastDuration] + BCMin4[LonMap, LatMap]
-        } else if(ForecastDuration > 14){
-          LongPrecip[ForecastDuration] = LongPrecip[ForecastDuration] + BCPrecip3[LonMap, LatMap]
-          LongTMax[ForecastDuration] = LongTMax[ForecastDuration] + BCMax3[LonMap, LatMap]
-          LongTMin[ForecastDuration] = LongTMin[ForecastDuration] + BCMin3[LonMap, LatMap]
-        }
-        
-        if(LongPrecip[ForecastDuration] < 0) LongPrecip[ForecastDuration] = 0
-        
-      }
-      
-      #With bias corrections done, now apply a transform to all values so that the distribution matches the gridded data
+      #Do not apply bias correction
       
       PrecipMap = DummyMap
       TempMap = DummyMap

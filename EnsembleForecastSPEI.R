@@ -77,7 +77,9 @@ dir.create(OutDir)
 FirstMemDir = paste0(InDir, '0\\')
 AllFiles = list.files(FirstMemDir)
 
-cl = makeCluster(21)    #21 members, 21 cores
+clCount = detectCores() - 4
+
+cl = makeCluster(clCount)		
 registerDoParallel(cl)
 
 foreach(Mem = 0:20) %dopar% {   #Run a core for each of the members - each core will hit each location, which will result in 21 sets of SPEI

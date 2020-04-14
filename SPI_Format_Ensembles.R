@@ -61,7 +61,9 @@ for(i in 0:20){
 
 ############################################################################################################################################################
 
-cl = makeCluster(21)
+clCount = detectCores() - 4
+
+cl = makeCluster(clCount)		
 registerDoParallel(cl)
 
 foreach(Member = 0:20) %dopar% {    #21 members, 21 cores.

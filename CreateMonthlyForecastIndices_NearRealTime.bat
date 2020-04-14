@@ -17,17 +17,13 @@ set MainDir=%cd%
 if not exist "MonthlyForecasts/!StartDate!" mkdir "MonthlyForecasts/!StartDate!"
 if not exist "MonthlyForecasts/!StartDate!CSV" mkdir "MonthlyForecasts/!StartDate!CSV"
 
-REM Bias corrections are fit on a per-forecast basis, so this step will require a lot of downloading and will take a while to run. Will generate ../Misc/BiasCorrections/YYYY-MM-DD/..
-
-REM "C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !MainDir!/Processes/FitBiasCorrectionMappings_3Week.R --args !StartDate! !EndDate! !MainDir!
-
 REM Reads the already downloaded forecast gribs and converts them to CSV. These are not yet the long form forecasts, just the latest month. Generates ../MonthlyForecasts/YYYY-MM-DDCSV/..
 
 REM "C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !MainDir!/Processes/Prepare32DayForecastGribsAuto.R --args !StartDate! !EndDate! !MainDir!
 
 REM Takes the CSV from previous and appends it to the ongoing timeseries of forecasts. Applies a transform to the newer data (the ongoing timeseries is pre-transformed). The transformation is pre-generated and can be applied on the fly, unlike the bias correction. Generates ../MonthlyForecasts/YYYY-MM-DDForecast/..
 
-REM "C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !MainDir!/Processes/CorrectAndAppendForecasts.R --args !StartDate! !EndDate! !MainDir!
+REM "C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !MainDir!/Processes/CorrectAndAppendForecasts_NearRealTime.R --args !StartDate! !EndDate! !MainDir!
 
 REM Sums monthly precip and formats for reading into Richard's SPI program. Generates ../MonthlyForecasts/AccumulatedPrecip/YYYY-MM-DD/..
 
@@ -35,7 +31,7 @@ REM "C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !MainDir!/Processes/SPI_Format_
 
 REM Richard's PDI program. Calculates PDI and P-PE on all ensembles. Generates ../Indices/PDI/YYYY-MM-DD/.. Including SPEI Input Sub-dir
 
-REM !MainDir!/Processes/EnsembleForecastPDI.exe !StartDate! !EndDate!
+!MainDir!/Processes/EnsembleForecastPDI.exe !StartDate! !EndDate!
 
 REM Richard's SPI program. Calculates SPI on all ensembles. Generates ../Indices/SPI/YYYY-MM-DD/..
 
@@ -43,11 +39,9 @@ REM !MainDir!/Processes/EnsembleForecastSPI.exe !StartDate! !EndDate!
 
 REM Another R script, calling the 'spei' package to calculated SPEI based on the SPEI Input from Ricahrd's PDI program. Generates ../Indices/SPEI/YYYY-MM-DD/..
 
-REM "C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !MainDir!/Processes/EnsembleForecastSPEI.R --args !StartDate! !EndDate! !MainDir!
+"C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !MainDir!/Processes/EnsembleForecastSPEI.R --args !StartDate! !EndDate! !MainDir!
 
 REM This process will automatically download the previous month's CDM. It then reads the CDM shape file and generates a CSV containing the CDM values at each grid location.
 
 "C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !MainDir!/Processes/ExtractCDM.R --args !StartDate! !EndDate! !MainDir!
-
-pause
 

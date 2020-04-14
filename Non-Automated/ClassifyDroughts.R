@@ -13,15 +13,15 @@ library(parallel)
 library(doParallel)
 library(foreach)
 
-ForecastDate = as.Date("2020-02-13")
+ForecastDate = as.Date("2020-03-31")
 IndexCount = (12*2) + 1 + 2 + 2 + 1 + 7  #Not just indices - 12 months of SPI, SPEI + 1 PDI value + Lat/Lon + Year/Month + Ecozone + current and past 6 months of drought. We only use the last month, but previous months could be included as a potential way of separating long and short term drought.
 
 
 #These two groupings should be identical, but training groups could include extra ecozones. For example, we want to classify ecozone N. Ecozone N has very poor training data, so we want to train the classifier with ecozone N and M. We can later train another classifier only on ecozone M for the classification of ecozone M. This allows us to leverage the better training data of ecozone M without degrading the classification of ecozone M.
-TrainGroups = list(c(10))
-ClassifyGroups = list(c(10))
+TrainGroups = list(c(1),c(2),c(3),c(4),c(5),c(6),c(7),c(8),c(9),c(10),c(11),c(12),c(13),c(14),c(15),c(16),c(17),c(18),c(19),c(20),c(21))
+ClassifyGroups = list(c(1),c(2),c(3),c(4),c(5),c(6),c(7),c(8),c(9),c(10),c(11),c(12),c(13),c(14),c(15),c(16),c(17),c(18),c(19),c(20),c(21))
 
-MainDirectory = 'E:\\Test\\AutomaticDO\\'
+MainDirectory = 'D:\\Work\\AutomaticDO\\'
 ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\Classifications\\")
 PreviousOutputDir = paste0(MainDirectory, "Outcomes\\Prior\\")
 
@@ -44,7 +44,7 @@ IntFiles = intersect(SPIFormatFiles, SPEIFormatFiles)     #Every index of both f
 PredictArray = array(0, c(21, length(IntFiles), IndexCount))    #The 21 is for the 21 ensemble members
 
 
-cl = makeCluster(40)    #Arbitrary use of 40 threads based off of my CPU's specs. Check yours and pick a number slightly below your core count.
+cl = makeCluster(8)    #Arbitrary use of 40 threads based off of my CPU's specs. Check yours and pick a number slightly below your core count.
 registerDoParallel(cl)
 
 Out = foreach(Par = 1:40) %dopar% {  #This 40 and the 40s below will need to be changed based on your core count.
