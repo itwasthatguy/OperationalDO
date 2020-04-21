@@ -13,7 +13,7 @@ library(parallel)
 library(doParallel)
 library(foreach)
 
-ForecastDate = as.Date("2020-03-31")
+ForecastDate = as.Date("2020-04-02")
 IndexCount = (12*2) + 1 + 2 + 2 + 1 + 7  #Not just indices - 12 months of SPI, SPEI + 1 PDI value + Lat/Lon + Year/Month + Ecozone + current and past 6 months of drought. We only use the last month, but previous months could be included as a potential way of separating long and short term drought.
 
 
@@ -25,21 +25,23 @@ MainDirectory = 'D:\\Work\\AutomaticDO\\'
 ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\Classifications\\")
 PreviousOutputDir = paste0(MainDirectory, "Outcomes\\Prior\\")
 
-TrainingDataFile = paste0(MainDirectory, 'Historical\\FullTrainingData.csv')
+TrainingDataFile = paste0(MainDirectory, 'Historical\\ProvTrainingData.csv')
 TrainingData = read.csv(TrainingDataFile)
 
 SPIForecastDir = paste0(MainDirectory, 'Indices\\SPI\\', ForecastDate, '\\')
 SPEIForecastDir = paste0(MainDirectory, 'Indices\\SPEI\\', ForecastDate, '\\')
 PDIForecastDir = paste0(MainDirectory, 'Indices\\PDI\\', ForecastDate, '\\')
 ForecastDroughtFile = paste0(MainDirectory, 'Indices\\CDM_Previous\\', ForecastDate, '\\CDM.csv')
-EcoZonesFile = paste0(MainDirectory, '\\Misc\\EcozoneIntersections.csv')
+EcoZonesFile = paste0(MainDirectory, '\\Misc\\PointLocationsEco.csv')
 
-SPIForecastDir0 = paste0(SPIForecastDir, '0', '\\')
-SPEIForecastDir0 = paste0(SPEIForecastDir, '0', '\\')
-SPIFormatFiles = list.files(SPIForecastDir0)
-SPEIFormatFiles = list.files(SPEIForecastDir0)
+#SPIForecastDir0 = paste0(SPIForecastDir, '0', '\\')
+#SPEIForecastDir0 = paste0(SPEIForecastDir, '0', '\\')
+#SPIFormatFiles = list.files(SPIForecastDir0)
+#SPEIFormatFiles = list.files(SPEIForecastDir0)
+#IntFiles = intersect(SPIFormatFiles, SPEIFormatFiles)     #Every index of both forecast types will have these locations
 
-IntFiles = intersect(SPIFormatFiles, SPEIFormatFiles)     #Every index of both forecast types will have these locations
+IntFiles = read.csv('D:\\Work\\AutomaticDO\\Misc\\PointLocations.csv')
+IntFiles = paste0(IntFiles[,1], '_', IntFiles[,2], '.csv')
 
 PredictArray = array(0, c(21, length(IntFiles), IndexCount))    #The 21 is for the 21 ensemble members
 
@@ -122,8 +124,11 @@ EcozonesData = read.csv(EcoZonesFile)
 for(EcoPoint in 1:dim(EcozonesData)[1]){
   EcoZonePoint = EcozonesData[EcoPoint,]
   
-  PredictLocs = intersect(which(PredictArray[1,,1] == EcoZonePoint[,2]), which(PredictArray[1,,2] == EcoZonePoint[,3]))
-  PredictArray[,PredictLocs, 37] = EcozonesData[EcoPoint,4]
+  TrainLocs = intersect(which(OutTrainArray[,1] == EcoZonePoint[,1]), which(OutTrainArray[,2] == EcoZonePoint[,2]))
+  OutTrainArray[TrainLocs,37] = EcozonesData[EcoPoint,3]
+  
+  #PredictLocs = intersect(which(PredictArray[1,,1] == EcoZonePoint[,1]), which(PredictArray[1,,2] == EcoZonePoint[,2]))
+  #PredictArray[,PredictLocs, 37] = EcozonesData[EcoPoint,3]
 }
 
 
@@ -156,7 +161,7 @@ for(TrainGroup in TrainGroups){
 #This method is used because different ecozones and groups of ecozones may or may not have all experienced severe drought. This allows a location specific scaling that better adjusts the distribution of outputs to not confuse the classifier.
   
   for(SevSampCount in 0:5){
-    if(length(which(TrainMat[,30] == SevSampCount)) > (0.01 * length(TrainMat[,30]))){
+    if(length(which(TrainMat[,30] == SevSampCount)) > (0.005 * length(TrainMat[,30]))){
       BaselineClass = SevSampCount
     }
   }
@@ -180,17 +185,17 @@ for(TrainGroup in TrainGroups){
   YTrain = as.array(SubSampleMat[,30])
   class(YTrain) = 'integer'
   
+  if(length(YTrain) == 0) next
+  
   model <- keras_model_sequential() %>%
-    layer_dense(units = 40, activation = 'relu', input_shape = (28)) %>% 
-    layer_dropout(rate=0.2) %>%
-    layer_dense(units = 30, activation = 'relu') %>%
+    layer_dense(units = 24, activation = 'relu', input_shape = (28)) %>% 
     layer_dense(units = 6, activation = 'softmax')
   
   # Compile model
   model %>% compile(
     loss = 'sparse_categorical_crossentropy',
     optimizer = optimizer_adam(lr = 0.0001, beta_1 = 0.9, beta_2 = 0.999,
-                               epsilon = NULL, decay = 0.00000001, amsgrad = FALSE, clipnorm = NULL,
+                               epsilon = NULL, decay = 0.0000000000000000001, amsgrad = FALSE, clipnorm = NULL,
                                clipvalue = NULL),
     metrics = c('accuracy')
   )
@@ -198,9 +203,9 @@ for(TrainGroup in TrainGroups){
   # Train model
   history = model %>% fit(
     XTrain, YTrain,
-    batch_size = 256,
-    epochs = 500,
-    validation_split = 0.2
+    batch_size = 64,
+    epochs = 200,
+    validation_split = 0.02
   )
   
   for(Mem in 1:21){
@@ -212,6 +217,8 @@ for(TrainGroup in TrainGroups){
     XPredict[which(is.infinite(XPredict))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
     YPredict = as.array(DataArray[,30])
     class(YPredict) = 'integer'
+    
+    if(length(YPredict) == 0) next
     
     Results = predict(model, XPredict)
     ResultsClass = apply(Results, 1, FUN = which.max) - 1
