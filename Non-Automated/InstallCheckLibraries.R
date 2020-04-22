@@ -17,6 +17,11 @@ library(SPEI)
 library(qmap)
 library(sf)
 library(keras)
+
+########  
+########
 install_tensorflow(version = "gpu")
 library(ranger)
 install_keras(tensorflow = "gpu")
+########
+########
