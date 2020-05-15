@@ -8,6 +8,7 @@ cd /d %~dp0
 cd ..
 
 set Dir=%cd%
+set WgetDir=!Dir!/Processes/
 
 
 set YYYYMMDD=%DATE:~0,4%%DATE:~5,2%%DATE:~8,2%
@@ -42,7 +43,7 @@ set "fileName1=CMC_geps-raw_TMP_TGL_2m_latlon0p5x0p5_!YYYYMMDD!00_P"
 set "hour=000%%A"
 
 set "fileName2=!fileName1!!hour:~-3!*"
-!Dir!\wget.exe -r -p -np -P !Dir!\24HForecasts\Grib\ robots=off https://dd.weather.gc.ca/ensemble/geps/grib2/raw/00/!hour:~-3!/ -A !filename2!
+!WgetDir!\wget.exe -r -p -np -P !Dir!\24HForecasts\Grib\ robots=off https://dd.weather.gc.ca/ensemble/geps/grib2/raw/00/!hour:~-3!/ -A !filename2!
 
 )
 
@@ -50,4 +51,4 @@ REM YYYY-MM-DD 		The dashes are neccessary
 set DateHyphen=%DATE:~0,4%-%DATE:~5,2%-%DATE:~8,2%
 
 REM R script to append daily forecast values into CSV files
-"C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !Dir!/Processes/Prepare24HForecastGribsAuto_TransformMonth.R --args !DateHyphen! !Dir!
+"C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !Dir!/Processes/Prepare24HForecastGribsAuto.R --args !DateHyphen! !Dir!
