@@ -20,8 +20,8 @@ library(keras)
 
 ########  
 ########
-install_tensorflow(version = "gpu")
-library(ranger)
-install_keras(tensorflow = "gpu")
+#install_tensorflow(version = "gpu")
+#library(ranger)
+#install_keras(tensorflow = "gpu")
 ########
 ########
