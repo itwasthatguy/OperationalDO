@@ -30,10 +30,9 @@ set "fileName1=CMC_geps-raw_APCP_SFC_0_latlon0p5x0p5_!YYYYMMDD!00_P"
 set "hour=000%%A"
 
 set "fileName2=!fileName1!!hour:~-3!*"
-!Dir!\wget.exe -r -p -np -P !Dir!\24HForecasts\Grib\ robots=off https://dd.weather.gc.ca/ensemble/geps/grib2/raw/00/!hour:~-3!/ -A !filename2!
+!WgetDir!\wget.exe -r -p -np -P !Dir!\24HForecasts\Grib\ robots=off https://dd.weather.gc.ca/ensemble/geps/grib2/raw/00/!hour:~-3!/ -A !filename2!
 
 )
-
 
 for /l %%A in (6,3,%max%) Do (
 
