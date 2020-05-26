@@ -30,7 +30,7 @@ ClassifyGroups = list(c(1),c(2),c(3),c(4),c(5),c(6),c(7),c(8),c(9),c(10),c(11),c
 ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\Classifications\\")
 PreviousOutputDir = paste0(MainDirectory, "Outcomes\\Prior\\")
 
-TrainingDataFile = paste0(MainDirectory, 'Historical\\ProvTrainingData.csv')
+TrainingDataFile = paste0(MainDirectory, 'Historical\\FullTrainingData.csv')
 TrainingData = read.csv(TrainingDataFile)
 
 SPIForecastDir = paste0(MainDirectory, 'Indices\\SPI\\', ForecastDate, '\\')
