@@ -13,7 +13,13 @@ library(parallel)
 library(doParallel)
 library(foreach)
 
+######### Set the date and the directory accordingly!
+
+MainDirectory = 'D:\\Work\\AutomaticDO\\'
 ForecastDate = as.Date("2020-05-07")
+
+#########
+
 IndexCount = (12*2) + 1 + 2 + 2 + 1 + 7  #Not just indices - 12 months of SPI, SPEI + 1 PDI value + Lat/Lon + Year/Month + Ecozone + current and past 6 months of drought. We only use the last month, but previous months could be included as a potential way of separating long and short term drought.
 
 
@@ -21,7 +27,6 @@ IndexCount = (12*2) + 1 + 2 + 2 + 1 + 7  #Not just indices - 12 months of SPI, S
 TrainGroups = list(c(1),c(2),c(3),c(4),c(5),c(6),c(7),c(8),c(9),c(10),c(11),c(12),c(13),c(14),c(15))
 ClassifyGroups = list(c(1),c(2),c(3),c(4),c(5),c(6),c(7),c(8),c(9),c(10),c(11),c(12),c(13),c(14),c(15))
 
-MainDirectory = 'D:\\Work\\AutomaticDO\\'
 ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\Classifications\\")
 PreviousOutputDir = paste0(MainDirectory, "Outcomes\\Prior\\")
 
