@@ -131,8 +131,8 @@ EcozonesData = read.csv(EcoZonesFile)
 for(EcoPoint in 1:dim(EcozonesData)[1]){
   EcoZonePoint = EcozonesData[EcoPoint,]
   
-  PredictLocs = intersect(which(PredictArray[1,,1] == EcoZonePoint[,2]), which(PredictArray[1,,2] == EcoZonePoint[,3]))
-  PredictArray[,PredictLocs, 37] = EcozonesData[EcoPoint,4]
+  PredictLocs = intersect(which(PredictArray[1,,1] == EcoZonePoint[,1]), which(PredictArray[1,,2] == EcoZonePoint[,2]))
+  PredictArray[,PredictLocs, 37] = EcozonesData[EcoPoint,3]
 }
 
 
