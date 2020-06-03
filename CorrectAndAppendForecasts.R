@@ -1,5 +1,15 @@
 #Corrects and appends forecasts, but uses the old style of monthly calibrations.
 
+if(!require(doParallel)){
+  install.packages('doParallel')
+}
+if(!require(foreach)){
+  install.packages('foreach')
+}
+if(!require(qmap)){
+  install.packages('qmap')
+}
+
 library(parallel)
 library(doParallel)
 library(foreach)
