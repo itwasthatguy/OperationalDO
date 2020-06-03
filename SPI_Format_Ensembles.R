@@ -1,4 +1,10 @@
 #This script basically just sums monthly precipitation and formats in the way that richard's SPI program likes. Overall it's fairly simple, going day by day and adding precipitation. When it reaches a new month, it resets.
+if(!require(doParallel)){
+  install.packages('doParallel')
+}
+if(!require(foreach)){
+  install.packages('foreach')
+}
 
 library(parallel)
 library(doParallel)
