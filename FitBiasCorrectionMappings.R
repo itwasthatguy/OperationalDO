@@ -4,6 +4,16 @@
 
 #To find the bias, we will use the hindcast. For the thursday of our forecast, we will take the hindcast initialized at that same day, and extract the values at lead times of 3 weeks and 4 weeks. These weeks will be present for 1998 through 2017. As an example, if we were to forecast on August 1st, we would take the values hindcasted on August 1st of August 15th to 21st and August 22nd to 28th. From all these daily values of all years, we can create a mean daily value of whichever variable we're looking at. Next we will take the hindcasts initalized on those same weeks, so that we have the same daily values, only initialized at a lead time of 1 week instead of 3 and 4. From these, we also create our mean daily values. The difference between these values is our bias.
 
+if(!require(doParallel)){
+  install.packages('doParallel')
+}
+if(!require(foreach)){
+  install.packages('foreach')
+}
+if(!require(ncdf4)){
+  install.packages('ncdf4')
+}
+
 library(parallel)
 library(doParallel)
 library(foreach)
