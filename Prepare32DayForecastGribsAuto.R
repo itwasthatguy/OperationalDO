@@ -1,3 +1,7 @@
+if(!require(ncdf4)){
+  install.packages('ncdf4')
+}
+
 library(ncdf4)
 
 #This script will read the forecast grib files and convert the data to location-specific CSV format. Each CSV will contain all daily data from the start of the forecast period to the end. This is usually the first thursday of a month to its end. Each CSV will contain data for all ensemble members.
