@@ -2,6 +2,13 @@
 
 #We currently have a forecast "backing" in \GriddedWeather\Forecast1719 which is composed of 24 hour forecasts and runs continually from June 1, 2017 onward. The goal is to be able to update this backing with new days. This will only make use of ensemble member 0.
 
+if(!require(qmap)){
+  install.packages('qmap')
+}
+if(!require(ncdf4)){
+  install.packages('ncdf4')
+}
+
 library(ncdf4)      #library function is much like python's import
 library(qmap)
 
