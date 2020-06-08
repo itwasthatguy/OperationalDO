@@ -2,18 +2,27 @@
 
 #Command line arguments from the batch file. Dates and directories specified. Unlike usual, the forecast date is the last day of the month, rather than the usual first thursday. This is just for the off chance that the true "forecast date" is a late day in the previous month.
 
+print("This script doesn't work yet")
+q()
+
+
 ForecastDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
 LastDate = as.Date(commandArgs(trailingOnly = TRUE)[3])
 MainDir = commandArgs(trailingOnly = TRUE)[4]
+
+#ForecastDate = as.Date('2020-06-04')
+#LastDate = as.Date('2020-06-30')
+#MainDir = 'D:\\Work\\AutomaticDO\\'
+
+CDMArchive = 'F:\\Location\\'
 
 library(sf)
 
 #Paths
 
 strCDMDir = paste0(MainDir, '\\CDM\\')
-strPtsTemplatePath = paste0(MainDir, '\\Misc\\HalfGridPoints.csv')
+strPtsTemplatePath = paste0(MainDir, '\\Misc\\PointLocations.csv')
 strOutputDir = paste0(MainDir,'\\Indices\\CDM_Previous\\', ForecastDate,'\\')
-URL = 'http://www.agr.gc.ca/atlas/data_donnees/cli/canadianDroughtMonitor/shp/areasOfDrought'
 
 #Extract month and year as numeric values
 
@@ -47,33 +56,44 @@ if(intYear < 10){
   }
 }
 
-#Generate strings to which file to download and which directory to place it
 
-File=paste0(URL,'/',FullYear,'/cdm_',strDateFolder,'_drought_areas_shp.zip')
-OutDir=paste0(MainDir, '\\CDM\\',strDateFolder,'\\')
+#Something to grab the file from the network
 
-if(!dir.exists(OutDir)) dir.create(OutDir)
 
-#Opens the command prompt and enters these commands. Make sure you have wget in the right location, and make sure winrar is installed.
+###
 
-system(paste0(MainDir, '\\wget.exe -r -p -np -nH --cut-dirs=7 -P ',OutDir,' robots=off ',File))
+ZipDir = paste0(MainDir, 'CDM\\', strDateFolder, '\\')
+
+if(!dir.exists(ZipDir)) dir.create(ZipDir)
+
+
+####
+
+#Once I know the directory and how it's saved, copy the zip file into ZipDir and we can carry on.
+
+####
+
   
-system(paste0('winrar e ',OutDir,'cdm_',strDateFolder,'_drought_areas_shp.zip ',OutDir,'Unzip\\'))
+system(paste0('winrar e ',ZipDir,'CDM_',strDateFolder,'_lr_shp.zip ',ZipDir,'Unzip\\'))
 
 #Read the shape file and extract the values at the locations given by the template CSV.
 
 strCDMDir = paste0(strCDMDir, strDateFolder, '\\Unzip\\')
 
-strShpFiles = list.files(strCDMDir, pattern = '\\.shp$', full.names=TRUE)
+strShpFiles1 = list.files(strCDMDir, pattern = '\\.shp$', full.names=TRUE)
+strShpFiles2 = list.files(strCDMDir, pattern = 'draft', full.names=TRUE)
+strShpFilesInt = intersect(strShpFiles1, strShpFiles2)
 
 PtsTemplate = read.csv(strPtsTemplatePath)
-PtsTemplate[,3] = PtsTemplate[,3] - 360
-PtsTemplateGeo = st_as_sf(PtsTemplate, coords =c('V2', 'V1'), crs=4326)
+PtsTemplate[,2] = PtsTemplate[,2] - 360
+PtsTemplate = cbind(1:dim(PtsTemplate)[1], PtsTemplate)
+colnames(PtsTemplate) = c('X', 'Lat', 'Lon')
+PtsTemplateGeo = st_as_sf(PtsTemplate, coords =c(3, 2), crs=4326)
 
 intCDMVals = array(0, c(dim(PtsTemplate)[1]))
 
-for(i in 1:length(strShpFiles)){
-  strShpFile = strShpFiles[i]
+for(i in 1:length(strShpFilesInt)){
+  strShpFile = strShpFilesInt[i]
   ShpData = read_sf(strShpFile)
   ShpDataTF = st_transform(ShpData, st_crs(PtsTemplateGeo))
   ShpIntersects = st_intersection(ShpDataTF, PtsTemplateGeo)
