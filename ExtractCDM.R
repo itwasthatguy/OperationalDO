@@ -2,21 +2,22 @@
 
 #Command line arguments from the batch file. Dates and directories specified. Unlike usual, the forecast date is the last day of the month, rather than the usual first thursday. This is just for the off chance that the true "forecast date" is a late day in the previous month.
 
-print("This script doesn't work yet")
-q()
-
-
-ForecastDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
-LastDate = as.Date(commandArgs(trailingOnly = TRUE)[3])
-MainDir = commandArgs(trailingOnly = TRUE)[4]
-
-#ForecastDate = as.Date('2020-06-04')
-#LastDate = as.Date('2020-06-30')
-#MainDir = 'D:\\Work\\AutomaticDO\\'
-
-CDMArchive = 'F:\\Location\\'
+#print("This script doesn't work yet")
+#q()
 
 library(sf)
+
+#CDMArchive = 'F:\\Location\\'
+
+#ForecastDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
+#LastDate = as.Date(commandArgs(trailingOnly = TRUE)[3])
+#MainDir = commandArgs(trailingOnly = TRUE)[4]
+
+ForecastDate = as.Date('2020-07-02')
+LastDate = as.Date('2020-07-31')
+MainDir = 'D:\\Work\\AutomaticDO\\'
+
+
 
 #Paths
 
@@ -81,8 +82,9 @@ system(paste0('winrar e ',ZipDir,'CDM_',strDateFolder,'_lr_shp.zip ',ZipDir,'Unz
 strCDMDir = paste0(strCDMDir, strDateFolder, '\\Unzip\\')
 
 strShpFiles1 = list.files(strCDMDir, pattern = '\\.shp$', full.names=TRUE)
-strShpFiles2 = list.files(strCDMDir, pattern = 'draft', full.names=TRUE)
-strShpFilesInt = intersect(strShpFiles1, strShpFiles2)
+#strShpFiles2 = list.files(strCDMDir, pattern = 'draft', full.names=TRUE)
+#strShpFilesInt = intersect(strShpFiles1, strShpFiles2)
+strShpFilesInt = strShpFiles1
 
 PtsTemplate = read.csv(strPtsTemplatePath)
 PtsTemplate[,2] = PtsTemplate[,2] - 360
