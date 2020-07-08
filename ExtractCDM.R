@@ -74,8 +74,14 @@ if(!dir.exists(ZipDir)) dir.create(ZipDir)
 
 ####
 
+ExistingFiles = length(list.files(ZipDir))
+
+if(ExistingFiles > 0){
+  system(paste0('winrar e ',ZipDir,'CDM_',strDateFolder,'_lr_shp.zip ',ZipDir,'Unzip\\'))
+} else {
+  print('Shapefiles already present - check the date')
   
-system(paste0('winrar e ',ZipDir,'CDM_',strDateFolder,'_lr_shp.zip ',ZipDir,'Unzip\\'))
+}
 
 #Read the shape file and extract the values at the locations given by the template CSV.
 
