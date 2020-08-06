@@ -44,7 +44,7 @@ for(Rep in 1:3){              #It's likely that the network will crap out at som
       ArchiveString = paste0('subX_reforecast_ECCC_', Year, format(ForecastDate, format='%m'), format(ForecastDate, format='%d'), "00_m0", Member, '.tar')
       if(!file.exists(paste0(MainDir, 'Temp\\Week1\\', ArchiveString))){
         WgetString = paste0(MMDD1, ArchiveString)
-        CmdString = paste0(MainDir, 'wget.exe -r -p -nH --cut-dirs 6 -np -P ', MainDir, 'Temp\\Week1\\ robots=off ', WgetString)
+        CmdString = paste0(MainDir, '\\Processes\\wget.exe -r -p -nH --cut-dirs 6 -np -P ', MainDir, 'Temp\\Week1\\ robots=off ', WgetString)
         system(CmdString)
         
         RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week1\\', ArchiveString, ' ', Vars[1], ' ', MainDir, 'Temp\\Week1\\', ForecastDate)
@@ -57,7 +57,7 @@ for(Rep in 1:3){              #It's likely that the network will crap out at som
       ArchiveString = paste0('subX_reforecast_ECCC_', Year, format(ForecastDate, format='%m'), format(Week3, format='%d'), "00_m0", Member, '.tar')
       if(!file.exists(paste0(MainDir, 'Temp\\Week3\\', ArchiveString))){
         WgetString = paste0(MMDD3, ArchiveString)
-        CmdString = paste0(MainDir, 'wget.exe -r -p -nH --cut-dirs 6 -np -P ', MainDir, 'Temp\\Week3\\ robots=off ', WgetString)
+        CmdString = paste0(MainDir, '\\Processes\\wget.exe -r -p -nH --cut-dirs 6 -np -P ', MainDir, 'Temp\\Week3\\ robots=off ', WgetString)
         system(CmdString)
         
         RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week3\\', ArchiveString, ' ', Vars[1], ' ', MainDir, 'Temp\\Week3\\', ForecastDate)
