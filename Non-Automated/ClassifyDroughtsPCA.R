@@ -153,20 +153,6 @@ colnames(TrainMatFull) = c('Lat', 'Lon', 'Year', 'Month', 'SPI1', 'SPI2', 'SPI3'
 #Now we loop through groupings of ecozones
 TrainMatFullbk = TrainMatFull
 
-
-
-Mins = array(0, c(15))
-Maxes = array(0, c(15))
-
-for(Eco in 1:15){
-  EcoData = TrainMatFull[which(TrainMatFull[,37] == Eco),]
-  Palmer = EcoData[,29]
-  Mins[Eco] = min(Palmer)
-  Maxes[Eco] = max(Palmer)
-  Palmer = (Palmer - min(Palmer)) / (max(Palmer) - min(Palmer))
-  TrainMatFull[which(TrainMatFull[,37] == Eco),29] = Palmer
-}
-
 TrainGroup = 1:15
 ClassifyGroup = 1:15
 
