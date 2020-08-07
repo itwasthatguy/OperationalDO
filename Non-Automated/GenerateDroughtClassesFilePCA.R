@@ -1,7 +1,7 @@
 
 
 MainDir = 'D:\\Work\\AutomaticDO\\'
-Date = as.Date('2020-06-04')
+Date = as.Date('2020-08-06')
 OutputFile = paste0(MainDir, 'Outcomes\\ResultsClasses', Date, 'PCA.csv')
 
 ClassMainDir = paste0(MainDir, 'Outcomes\\ClassificationsPCA\\')

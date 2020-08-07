@@ -1,7 +1,7 @@
 
 
 MainDir = 'D:\\Work\\AutomaticDO\\'
-Date = as.Date('2020-07-02')
+Date = as.Date('2020-08-06')
 OutputFile = paste0(MainDir, 'Outcomes\\ResultsClasses', Date, '.csv')
 
 ClassMainDir = paste0(MainDir, 'Outcomes\\Classifications\\')
@@ -15,7 +15,7 @@ Template = array(0, c(0, 3))
 
 LocsTotal = 0
 for(TemplateCount in c(1:10, 12:15)){
-  File = paste0(ClassDir, '1_', TemplateCount, '.csv')
+  File = paste0(ClassDir, '2_', TemplateCount, '.csv')
   Data = read.csv(File)
   Template = rbind(Template, Data)
   Locs = dim(Data)[1]
@@ -46,14 +46,13 @@ for(Member in 1:21){
 
 Files = list.files(PrevDir, full.names=TRUE)
 
-for(Member in 1:21){
-  RowCount = 1
-  for(Group in c(1:10, 12:15)){
-    File = paste0(PrevDir, Member, '_', Group, '.csv')
-    Data = read.csv(File)
-    PreviousArray[RowCount:(dim(Data)[1] + RowCount - 1), Member + 2] = Data[,3]
-    RowCount = RowCount + dim(Data)[1]
-  }
+Member = 2
+RowCount = 1
+for(Group in c(1:10, 12:15)){
+  File = paste0(PrevDir, Group, '_', Member, '.csv')
+  Data = read.csv(File)
+  PreviousArray[RowCount:(dim(Data)[1] + RowCount - 1), Member + 1] = Data[,3]
+  RowCount = RowCount + dim(Data)[1]
 }
 
 PreviousStates = PreviousArray[,3]
