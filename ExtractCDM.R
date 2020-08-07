@@ -11,7 +11,7 @@ library(sf)
 
 ForecastDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
 LastDate = as.Date(commandArgs(trailingOnly = TRUE)[3])
-MainDir = commandArgs(trailingOnly = TRUE)[4]
+MainDir = paste0(commandArgs(trailingOnly = TRUE)[4], '\\')
 
 #ForecastDate = as.Date('2020-08-06')
 #LastDate = as.Date('2020-08-31')
