@@ -1,10 +1,10 @@
 
 
 MainDir = 'D:\\Work\\AutomaticDO\\'
-Date = as.Date('2020-07-02')
-OutputFile = paste0(MainDir, 'Outcomes\\ResultsClasses', Date, '.csv')
+Date = as.Date('2020-06-04')
+OutputFile = paste0(MainDir, 'Outcomes\\ResultsClasses', Date, 'PCA.csv')
 
-ClassMainDir = paste0(MainDir, 'Outcomes\\Classifications\\')
+ClassMainDir = paste0(MainDir, 'Outcomes\\ClassificationsPCA\\')
 PrevMainDir = paste0(MainDir, 'Outcomes\\Prior\\')
 ClassDir = paste0(ClassMainDir, Date, '\\')
 PrevDir = paste0(PrevMainDir, Date, '\\')
@@ -14,7 +14,7 @@ Files = list.files(ClassDir, full.names=TRUE)
 Template = array(0, c(0, 3))
 
 LocsTotal = 0
-for(TemplateCount in c(1:10, 12:15)){
+for(TemplateCount in c(1:1)){
   File = paste0(ClassDir, '1_', TemplateCount, '.csv')
   Data = read.csv(File)
   Template = rbind(Template, Data)
@@ -36,7 +36,7 @@ Count = 2
 
 for(Member in 1:21){
   RowCount = 1
-  for(Group in c(1:10, 12:15)){
+  for(Group in c(1:1)){
     File = paste0(ClassDir, Member, '_', Group, '.csv')
     Data = read.csv(File)
     DroughtArray[RowCount:(dim(Data)[1] + RowCount - 1), Member + 2] = Data[,3]
@@ -48,7 +48,7 @@ Files = list.files(PrevDir, full.names=TRUE)
 
 for(Member in 1:21){
   RowCount = 1
-  for(Group in c(1:10, 12:15)){
+  for(Group in c(1:1)){
     File = paste0(PrevDir, Member, '_', Group, '.csv')
     Data = read.csv(File)
     PreviousArray[RowCount:(dim(Data)[1] + RowCount - 1), Member + 2] = Data[,3]
@@ -57,6 +57,9 @@ for(Member in 1:21){
 }
 
 PreviousStates = PreviousArray[,3]
+PreviousStates[which(PreviousStates == 1)] = 0
+PreviousStates[which(PreviousStates != 0)] = PreviousStates[which(PreviousStates != 0)] - 1
+
 
 ProbabilityArray = array(0, c(dim(DroughtArray)[1], 6))
 
@@ -66,16 +69,16 @@ for(Drought in 0:5){
   }
 }
 
-ChanceDrought = apply(ProbabilityArray[,3:6], 1, sum)
-ChanceNoDrought = apply(ProbabilityArray[,1:2], 1, sum)
+ChanceDrought = apply(ProbabilityArray[,2:6], 1, sum)
+ChanceNoDrought = ProbabilityArray[,1]
 
 #Divide into 4 options of binary drought or not drought, staying the same or changing either way
 #This is what index locations contain each option
 
-DroughtToDrought = intersect(which(ChanceDrought > 0.5), which(PreviousStates >= 2))
-ClearToClear = intersect(which(ChanceDrought < 0.5), which(PreviousStates < 2))
-ClearToDrought = intersect(which(ChanceDrought > 0.5), which(PreviousStates < 2))
-DroughtToClear = intersect(which(ChanceDrought < 0.5), which(PreviousStates >= 2))
+DroughtToDrought = intersect(which(ChanceDrought > 0.5), which(PreviousStates >= 1))
+ClearToClear = intersect(which(ChanceDrought < 0.5), which(PreviousStates < 1))
+ClearToDrought = intersect(which(ChanceDrought > 0.5), which(PreviousStates < 1))
+DroughtToClear = intersect(which(ChanceDrought < 0.5), which(PreviousStates >= 1))
 
 #Use ChanceDrought and ChanceNoDrought as the confidence values for ClearToDrought and DroughtToClear
 #For DroughtToDrought, we want to sum probabilities that are lower, equal, and higher than PreviousStates
@@ -93,9 +96,9 @@ OutputClasses[,1:2] = DroughtArray[,1:2]
 
 for(ChangeDrought in DroughtToDrought){
   Droughts = DroughtArray[ChangeDrought,3:23]
-  Lower = which((2:6) < PreviousStates[ChangeDrought]) + 1
-  Same = which((2:6) == PreviousStates[ChangeDrought]) + 1
-  Higher = which((2:6) > PreviousStates[ChangeDrought]) + 1
+  Lower = which((1:6) < PreviousStates[ChangeDrought]) + 1
+  Same = which((1:6) == PreviousStates[ChangeDrought]) + 1
+  Higher = which((1:6) > PreviousStates[ChangeDrought]) + 1
   
   if(length(Lower > 0)){
     DownChance = length(which(Droughts %in% Lower))/21

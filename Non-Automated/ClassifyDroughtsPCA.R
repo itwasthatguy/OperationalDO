@@ -16,7 +16,7 @@ library(foreach)
 ######### Set the date and the directory accordingly!
 
 MainDirectory = 'D:\\Work\\AutomaticDO\\'
-ForecastDate = as.Date("2020-08-06")
+ForecastDate = as.Date("2020-05-07")
 
 #########
 
@@ -24,10 +24,10 @@ IndexCount = (12*2) + 1 + 2 + 2 + 1 + 7  #Not just indices - 12 months of SPI, S
 
 
 #These two groupings should be identical, but training groups could include extra ecozones. For example, we want to classify ecozone N. Ecozone N has very poor training data, so we want to train the classifier with ecozone N and M. We can later train another classifier only on ecozone M for the classification of ecozone M. This allows us to leverage the better training data of ecozone M without degrading the classification of ecozone M.
-TrainGroups = list(c(1),c(2),c(3),c(4),c(5),c(6),c(7),c(8),c(9),c(10),c(11),c(12),c(13),c(14),c(15))
-ClassifyGroups = list(c(1),c(2),c(3),c(4),c(5),c(6),c(7),c(8),c(9),c(10),c(11),c(12),c(13),c(14),c(15))
+TrainGroups = list(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15))
+ClassifyGroups = list(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15))
 
-ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\Classifications\\")
+ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\ClassificationsPCA\\")
 PreviousOutputDir = paste0(MainDirectory, "Outcomes\\Prior\\")
 
 TrainingDataFile = paste0(MainDirectory, 'Historical\\FullTrainingData.csv')
@@ -51,7 +51,6 @@ IntFiles= paste0(IntFiles[,1], '_', IntFiles[,2], '.csv')
 
 
 PredictArray = array(0, c(21, length(IntFiles), IndexCount))    #The 21 is for the 21 ensemble members
-
 
 cl = makeCluster(8)    #Arbitrary use of 40 threads based off of my CPU's specs. Check yours and pick a number slightly below your core count.
 registerDoParallel(cl)
@@ -152,96 +151,167 @@ colnames(TrainMatFull) = c('Lat', 'Lon', 'Year', 'Month', 'SPI1', 'SPI2', 'SPI3'
 
 
 #Now we loop through groupings of ecozones
+TrainMatFullbk = TrainMatFull
 
-Counter = 0
-for(TrainGroup in TrainGroups){
-  Counter = Counter + 1
-  ClassifyGroup = ClassifyGroups[[Counter]]
+
+
+Mins = array(0, c(15))
+Maxes = array(0, c(15))
+
+for(Eco in 1:15){
+  EcoData = TrainMatFull[which(TrainMatFull[,37] == Eco),]
+  Palmer = EcoData[,29]
+  Mins[Eco] = min(Palmer)
+  Maxes[Eco] = max(Palmer)
+  Palmer = (Palmer - min(Palmer)) / (max(Palmer) - min(Palmer))
+  TrainMatFull[which(TrainMatFull[,37] == Eco),29] = Palmer
+}
+
+TrainGroup = 1:15
+ClassifyGroup = 1:15
+
+TrainMatZone = TrainMatFull[which(TrainMatFull[,37] %in% TrainGroup),]
+
+TrainMatChange = TrainMatZone[which(TrainMatZone[,30] != TrainMatZone[,31]),]
+TrainMatChangeNot = TrainMatZone[which(TrainMatZone[,30] == TrainMatZone[,31]),]
+
+SubSampleMat = TrainMatChange[which(TrainMatChange[,30] >= 4),]
+
+Samp = sample(which(TrainMatChangeNot[,30] == 4), size =400)
+SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
+Samp = sample(which(TrainMatChange[,30] == 3), size = 1300)
+SubSampleMat = rbind(SubSampleMat, TrainMatChange[Samp,])
+Samp = sample(which(TrainMatChange[,30] == 2), size = 2000)
+SubSampleMat = rbind(SubSampleMat, TrainMatChange[Samp,])
+Samp = sample(which(TrainMatChange[,30] == 1), size = 10000)
+SubSampleMat = rbind(SubSampleMat, TrainMatChange[Samp,])
+Samp = sample(which(TrainMatChange[,30] == 0), size = 8000)
+SubSampleMat = rbind(SubSampleMat, TrainMatChange[Samp,])
+
+Samp = sample(which(TrainMatChangeNot[,30] == 3), size = 100)
+SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
+Samp = sample(which(TrainMatChangeNot[,30] == 2), size = 200)
+SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
+Samp = sample(which(TrainMatChangeNot[,30] == 1), size = 1000)
+SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
+Samp = sample(which(TrainMatChangeNot[,30] == 0), size = 500)
+SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
+
+
+attr(TrainMatZone, 'dimnames') = NULL
+attr(SubSampleMat, 'dimnames') = NULL
+
+XTrain = as.array(SubSampleMat[,c(4:29,31,37)])
+XTrain[which(is.infinite(XTrain))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
+XTrain[which(is.na(XTrain))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
+YTrain = as.array(SubSampleMat[,30])
+class(YTrain) = 'integer'
+
+length(which(YTrain == 4))
+
+if(length(YTrain) == 0) next
+
+XTrainSub = XTrain[,c(1,2:6,14:18,27)]
+XTrainSub[which(XTrainSub[,12] == 0),12] = 1
+XTrainSub[,12] = XTrainSub[,12] - 1
+
+pca = prcomp(XTrainSub[,c(1:(dim(XTrainSub)[2]))], scale=TRUE)
+
+Input = cbind(pca$x[,1:8], XTrain[,28])
+Loading = pca$rotation[,1:8]
+
+YTrain[which(YTrain == 0)] = 1
+YTrain = YTrain - 1
+
+
+#########
+
+model <- keras_model_sequential() %>%
+  layer_dense(units = 60, activation = 'linear', input_shape = (dim(Input)[2])) %>%
+  layer_dense(units = 20, activation = 'linear', input_shape = (dim(Input)[2])) %>%
+  layer_dense(units = 6, activation = 'softmax')
+
+# Compile model
+model %>% compile(
+  loss = 'sparse_categorical_crossentropy',
+  optimizer = optimizer_adam(lr = 0.0001, beta_1 = 0.9, beta_2 = 0.999,
+                             epsilon = NULL, decay = 0.0000000000000, amsgrad = FALSE, clipnorm = NULL,
+                             clipvalue = NULL),
+  metrics = c('accuracy')
+)
+
+# Train model
+history = model %>% fit(
+  Input, YTrain,
+  batch_size = 512,#512
+  epochs = 100,
+  validation_split = 0.02
+)
+
+FullOut = c()
+
+for(Mem in 1:21){
+  DataArray = PredictArray[Mem,,]
+  DataArray = DataArray[which(DataArray[,37] %in% ClassifyGroup),]
+  class(DataArray) = 'numeric'
   
-  TrainMat = TrainMatFull[which(TrainMatFull[,37] %in% TrainGroup),]
+  XPredict = as.array(DataArray[,c(4:29,31,37)])
+  XPredict[which(is.infinite(XPredict))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
+  XPredict[which(is.na(XPredict))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
+  YPredict = as.array(DataArray[,30])
+  class(YPredict) = 'integer'
   
-#Subsampling is done the following way - Find the most severe drought class that represents more than 1 percent of the total instances. Do not sample this class or any more severe classes, instead take all of these points. Iterate through every less severe drought class, taking twice, then four times, then eight times, etc. as many of that drought class as the number of "baseline class" droughts.
+  if(length(YPredict) == 0) next
   
-#This method is used because different ecozones and groups of ecozones may or may not have all experienced severe drought. This allows a location specific scaling that better adjusts the distribution of outputs to not confuse the classifier.
+  #XPredict[which(XPredict[,27] == 0),27] = 1
+  #XPredict[,27] = XPredict[,27] - 1
+  XPredictSub = XPredict[,c(1,2:6,14:18,27)]
   
-  for(SevSampCount in 0:5){
-    if(length(which(TrainMat[,30] == SevSampCount)) > (0.01 * length(TrainMat[,30]))){
-      BaselineClass = SevSampCount
+  XPredictSub[which(XPredictSub[,12] == 0),12] = 1
+  XPredictSub[,12] = XPredictSub[,12] - 1
+  
+  Loaded = array(0, c(dim(XPredictSub)[1], dim(Input)[2]-1))
+  
+  for(Row in 1:dim(XPredictSub)[1]){
+    for(Comp in 1:dim(Input)[2]-1){
+      Loaded[Row,Comp] = sum(XPredictSub[Row,] * Loading[,Comp])
     }
   }
   
-  SubSampleMat = TrainMat[which(TrainMat[,30] >= BaselineClass),]
+  Loaded = cbind(Loaded, XPredict[,28])
   
-  Multiplier = 1
-  for(SampleCount in (BaselineClass -1):0){
-    Multiplier = Multiplier * 2
-    if(length(which(TrainMat[,30] == SampleCount)) < (length(which(TrainMat[,30] == BaselineClass)) * Multiplier)){
-      SubSampleMat = rbind(SubSampleMat, TrainMat[which(TrainMat[,30] == SampleCount),])
-    } else {
-      Samp = sample(which(TrainMat[,30] == SampleCount), size = length(which(TrainMat[,30] == BaselineClass))*Multiplier)
-      SubSampleMat = rbind(SubSampleMat, TrainMat[Samp,])
-    }
-    
-  }
+  YPredict[which(YPredict == 0)] = 1
+  YPredict = YPredict - 1
   
-  XTrain = as.array(SubSampleMat[,c(4:29,31,37)])
-  XTrain[which(is.infinite(XTrain))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
-  XTrain[which(is.na(XTrain))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
-  YTrain = as.array(SubSampleMat[,30])
-  class(YTrain) = 'integer'
+  Results = predict(model, Loaded)
+  ResultsClass = apply(Results, 1, FUN = which.max) - 1
   
-  if(length(YTrain) == 0) next
+  #table(ResultsClass, YPredict)
+  #table(ResultsClass, XPredictSub[,11])
   
-  model <- keras_model_sequential() %>%
-    layer_dense(units = 24, activation = 'relu', input_shape = (28)) %>% 
-    layer_dense(units = 6, activation = 'softmax')
+  Output = cbind(DataArray[,1], DataArray[,2])
+  Output = cbind(Output, ResultsClass)
   
-  # Compile model
-  model %>% compile(
-    loss = 'sparse_categorical_crossentropy',
-    optimizer = optimizer_adam(lr = 0.0001, beta_1 = 0.9, beta_2 = 0.999,
-                               epsilon = NULL, decay = 0.0000000000000, amsgrad = FALSE, clipnorm = NULL,
-                               clipvalue = NULL),
-    metrics = c('accuracy')
-  )
+  #View(XPredict[which(ResultsClass == 1),])
   
-  # Train model
-  history = model %>% fit(
-    XTrain, YTrain,
-    batch_size = 64,
-    epochs = 200,
-    validation_split = 0.05
-  )
+  if(!dir.exists(paste0(ClassificationOutputDir, ForecastDate, '\\'))) dir.create(paste0(ClassificationOutputDir, ForecastDate, '\\'))
+  write.csv(Output, paste0(ClassificationOutputDir, ForecastDate, '\\', Mem, '_', Counter, '.csv'), row.names=FALSE, quote=FALSE)
   
-  for(Mem in 1:21){
-    DataArray = PredictArray[Mem,,]
-    DataArray = DataArray[which(DataArray[,37] %in% ClassifyGroup),]
-    class(DataArray) = 'numeric'
-    
-    XPredict = as.array(DataArray[,c(4:29,31,37)])
-    XPredict[which(is.infinite(XPredict))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
-    XPredict[which(is.na(XPredict))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
-    YPredict = as.array(DataArray[,30])
-    class(YPredict) = 'integer'
-    
-    if(length(YPredict) == 0) next
-    
-    Results = predict(model, XPredict)
-    ResultsClass = apply(Results, 1, FUN = which.max) - 1
-    
-    Output = cbind(DataArray[,1], DataArray[,2])
-    Output = cbind(Output, ResultsClass)
-    
-    if(!dir.exists(paste0(ClassificationOutputDir, ForecastDate, '\\'))) dir.create(paste0(ClassificationOutputDir, ForecastDate, '\\'))
-    write.csv(Output, paste0(ClassificationOutputDir, ForecastDate, '\\', Mem, '_', Counter, '.csv'), row.names=FALSE, quote=FALSE)
-    
-    Output = cbind(DataArray[,1], DataArray[,2])
-    Output = cbind(Output, DataArray[,31])
-    
-    if(!dir.exists(paste0(PreviousOutputDir, ForecastDate, '\\'))) dir.create(paste0(PreviousOutputDir, ForecastDate, '\\'))
-    write.csv(Output, paste0(PreviousOutputDir, ForecastDate, '\\', Mem, '_', Counter, '.csv'), row.names=FALSE, quote=FALSE)
-    
-  }
-
+  Output = cbind(DataArray[,1], DataArray[,2])
+  Output = cbind(Output, DataArray[,31])
+  
+  if(!dir.exists(paste0(PreviousOutputDir, ForecastDate, '\\'))) dir.create(paste0(PreviousOutputDir, ForecastDate, '\\'))
+  write.csv(Output, paste0(PreviousOutputDir, ForecastDate, '\\', Mem, '_', Counter, '.csv'), row.names=FALSE, quote=FALSE)
+  
+  if(Mem == 1) FullOut = cbind(FullOut, DataArray[,1], DataArray[,2])
+  FullOut = cbind(FullOut, ResultsClass)
   
 }
+
+MedOut = array(0, c(3189,3))
+
+for(i in 1:3189){
+  MedOut[i,3] = median(FullOut[i, 3:23])
+}
+
+MedOut[,1:2] = FullOut[,1:2]
