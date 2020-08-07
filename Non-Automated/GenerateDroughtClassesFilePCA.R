@@ -14,7 +14,7 @@ Files = list.files(ClassDir, full.names=TRUE)
 Template = array(0, c(0, 3))
 
 LocsTotal = 0
-for(TemplateCount in c(1:1)){
+for(TemplateCount in c(15:15)){
   File = paste0(ClassDir, '1_', TemplateCount, '.csv')
   Data = read.csv(File)
   Template = rbind(Template, Data)
