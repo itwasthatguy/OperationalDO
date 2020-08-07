@@ -9,14 +9,13 @@ library(sf)
 
 #CDMArchive = 'F:\\Location\\'
 
-#ForecastDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
-#LastDate = as.Date(commandArgs(trailingOnly = TRUE)[3])
-#MainDir = commandArgs(trailingOnly = TRUE)[4]
+ForecastDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
+LastDate = as.Date(commandArgs(trailingOnly = TRUE)[3])
+MainDir = commandArgs(trailingOnly = TRUE)[4]
 
-ForecastDate = as.Date('2020-07-02')
-LastDate = as.Date('2020-07-31')
-MainDir = 'D:\\Work\\AutomaticDO\\'
-
+#ForecastDate = as.Date('2020-08-06')
+#LastDate = as.Date('2020-08-31')
+#MainDir = 'D:\\Work\\AutomaticDO\\'
 
 
 #Paths
@@ -24,6 +23,8 @@ MainDir = 'D:\\Work\\AutomaticDO\\'
 strCDMDir = paste0(MainDir, '\\CDM\\')
 strPtsTemplatePath = paste0(MainDir, '\\Misc\\PointLocations.csv')
 strOutputDir = paste0(MainDir,'\\Indices\\CDM_Previous\\', ForecastDate,'\\')
+
+NetworkLocation = '\\SKYEMCI01-CIFS.efs.agr.gc.ca\\data\\skregivfs307_Group\\Agroclimate\\agroclimpub\\03_OPERATIONS\\CDM_NADM\\PRODUCTS\\'
 
 #Extract month and year as numeric values
 
@@ -59,14 +60,16 @@ if(intYear < 10){
 
 
 #Something to grab the file from the network
+#GrabLoc = 'D:\\Work\\AutomaticDO\\2007'
 
-
-###
+GrabLoc = paste0(NetworkLocation, substr(strDateFolder, 3,4), '\\cdm_', strDateFolder)
+GrabFiles = list.files(GrabLoc, full.names=TRUE, recursive=FALSE)
 
 ZipDir = paste0(MainDir, 'CDM\\', strDateFolder, '\\')
 
 if(!dir.exists(ZipDir)) dir.create(ZipDir)
 
+file.copy(GrabFiles, ZipDir)
 
 ####
 
@@ -76,16 +79,9 @@ if(!dir.exists(ZipDir)) dir.create(ZipDir)
 
 ExistingFiles = length(list.files(ZipDir))
 
-if(ExistingFiles > 0){
-  system(paste0('winrar e ',ZipDir,'CDM_',strDateFolder,'_lr_shp.zip ',ZipDir,'Unzip\\'))
-} else {
-  print('Shapefiles already present - check the date')
-  
-}
-
 #Read the shape file and extract the values at the locations given by the template CSV.
 
-strCDMDir = paste0(strCDMDir, strDateFolder, '\\Unzip\\')
+strCDMDir = ZipDir
 
 strShpFiles1 = list.files(strCDMDir, pattern = '\\.shp$', full.names=TRUE)
 #strShpFiles2 = list.files(strCDMDir, pattern = 'draft', full.names=TRUE)
