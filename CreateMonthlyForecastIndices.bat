@@ -47,7 +47,7 @@ REM Another R script, calling the 'spei' package to calculated SPEI based on the
 
 REM This process will automatically download the previous month's CDM. It then reads the CDM shape file and generates a CSV containing the CDM values at each grid location.
 
-"C:/Program Files/R/R-4.0.0/bin/x64/Rscript" !MainDir!/Processes/ExtractCDM.R --args !StartDate! !EndDate! !MainDir!
+"C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/ExtractCDM.R --args !StartDate! !EndDate! !MainDir!
 
 REM This process will classify the upcoming drought based on the indices calculated by previous steps
 
