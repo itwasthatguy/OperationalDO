@@ -17,6 +17,8 @@ MainDir = paste0(commandArgs(trailingOnly = TRUE)[4], '\\')
 #LastDate = as.Date('2020-08-31')
 #MainDir = 'D:\\Work\\AutomaticDO\\'
 
+AcceptableSearchPatterns = 'd0|d1|d2|d3|d4'
+
 
 #Paths
 
@@ -24,7 +26,7 @@ strCDMDir = paste0(MainDir, '\\CDM\\')
 strPtsTemplatePath = paste0(MainDir, '\\Misc\\PointLocations.csv')
 strOutputDir = paste0(MainDir,'\\Indices\\CDM_Previous\\', ForecastDate,'\\')
 
-NetworkLocation = '\\SKYEMCI01-CIFS.efs.agr.gc.ca\\data\\skregivfs307_Group\\Agroclimate\\agroclimpub\\03_OPERATIONS\\CDM_NADM\\PRODUCTS\\'
+NetworkLocation = '\\\\SKYEMCI01-CIFS.efs.agr.gc.ca\\data\\skregivfs307_Group\\Agroclimate\\agroclimpub\\03_OPERATIONS\\CDM_NADM\\PRODUCTS\\'
 
 #Extract month and year as numeric values
 
@@ -84,9 +86,8 @@ ExistingFiles = length(list.files(ZipDir))
 strCDMDir = ZipDir
 
 strShpFiles1 = list.files(strCDMDir, pattern = '\\.shp$', full.names=TRUE)
-#strShpFiles2 = list.files(strCDMDir, pattern = 'draft', full.names=TRUE)
-#strShpFilesInt = intersect(strShpFiles1, strShpFiles2)
-strShpFilesInt = strShpFiles1
+strShpFiles2 = list.files(strCDMDir, pattern = AcceptableSearchPatterns, full.names=TRUE, ignore.case = TRUE)
+strShpFilesInt = intersect(strShpFiles1, strShpFiles2)
 
 PtsTemplate = read.csv(strPtsTemplatePath)
 PtsTemplate[,2] = PtsTemplate[,2] - 360

@@ -29,43 +29,45 @@ Week3 = ForecastDate + 14     #Week 3 vs week 4 and onwards
 MMDD1 = paste0('http://collaboration.cmc.ec.gc.ca/cmc/ensemble/subX/hindcast/', format(ForecastDate, format='%m'), format(ForecastDate, format='%d'), '/')
 MMDD3 = paste0('http://collaboration.cmc.ec.gc.ca/cmc/ensemble/subX/hindcast/', format(Week3, format='%m'), format(Week3, format='%d'), '/')
 
-
 Vars = c('*tasmax_2m*','*tasmin_2m*','*pr_sfc*')    #The names of the variables. Maximum and minimum temperature, and precipitation.
 
 dir.create(paste0(MainDir, 'Temp\\Week1\\', ForecastDate, '\\'))
 dir.create(paste0(MainDir, 'Temp\\Week3\\', ForecastDate, '\\'))
 
-for(Rep in 1:3){              #It's likely that the network will crap out at some point and we'll lose a file or two. This will re-run all missing archives so we'll probably be good. 3 Is arbitrary, but it should work well.
-  for(Year in 1998:2017){
-    for(Member in 1:4){
-      
-      #These sections go through and download the hindcast - given as zipped archives containing all variables. We then extract the variables we want, and place the files into another directory. We go through for weeks 1, 3 and 4, for all members, for all years.
-      
-      ArchiveString = paste0('subX_reforecast_ECCC_', Year, format(ForecastDate, format='%m'), format(ForecastDate, format='%d'), "00_m0", Member, '.tar')
-      if(!file.exists(paste0(MainDir, 'Temp\\Week1\\', ArchiveString))){
-        WgetString = paste0(MMDD1, ArchiveString)
-        CmdString = paste0(MainDir, '\\Processes\\wget.exe -r -p -nH --cut-dirs 6 -np -P ', MainDir, 'Temp\\Week1\\ robots=off ', WgetString)
-        system(CmdString)
+if(Week3 < LastDay){  #If week 3 is later than the end of the month, we don't need to download any hindcasts for bias correction. Instead, we will write files with flat zeroes in all positions, so that no values will be corrected.
+
+  for(Rep in 1:3){              #It's likely that the network will crap out at some point and we'll lose a file or two. This will re-run all missing archives so we'll probably be good. 3 Is arbitrary, but it should work well.
+    for(Year in 1998:2017){
+      for(Member in 1:4){
         
-        RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week1\\', ArchiveString, ' ', Vars[1], ' ', MainDir, 'Temp\\Week1\\', ForecastDate)
-        system(RarString)
-        RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week1\\', ArchiveString, ' ', Vars[2], ' ', MainDir, 'Temp\\Week1\\', ForecastDate)
-        system(RarString)
-        RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week1\\', ArchiveString, ' ', Vars[3], ' ', MainDir, 'Temp\\Week1\\', ForecastDate)
-        system(RarString)
-      }
-      ArchiveString = paste0('subX_reforecast_ECCC_', Year, format(ForecastDate, format='%m'), format(Week3, format='%d'), "00_m0", Member, '.tar')
-      if(!file.exists(paste0(MainDir, 'Temp\\Week3\\', ArchiveString))){
-        WgetString = paste0(MMDD3, ArchiveString)
-        CmdString = paste0(MainDir, '\\Processes\\wget.exe -r -p -nH --cut-dirs 6 -np -P ', MainDir, 'Temp\\Week3\\ robots=off ', WgetString)
-        system(CmdString)
+        #These sections go through and download the hindcast - given as zipped archives containing all variables. We then extract the variables we want, and place the files into another directory. We go through for weeks 1, 3 and 4, for all members, for all years.
         
-        RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week3\\', ArchiveString, ' ', Vars[1], ' ', MainDir, 'Temp\\Week3\\', ForecastDate)
-        system(RarString)
-        RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week3\\', ArchiveString, ' ', Vars[2], ' ', MainDir, 'Temp\\Week3\\', ForecastDate)
-        system(RarString)
-        RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week3\\', ArchiveString, ' ', Vars[3], ' ', MainDir, 'Temp\\Week3\\', ForecastDate)
-        system(RarString)
+        ArchiveString = paste0('subX_reforecast_ECCC_', Year, format(ForecastDate, format='%m'), format(ForecastDate, format='%d'), "00_m0", Member, '.tar')
+        if(!file.exists(paste0(MainDir, 'Temp\\Week1\\', ArchiveString))){
+          WgetString = paste0(MMDD1, ArchiveString)
+          CmdString = paste0(MainDir, '\\Processes\\wget.exe -r -p -nH --cut-dirs 6 -np -P ', MainDir, 'Temp\\Week1\\ robots=off ', WgetString)
+          system(CmdString)
+          
+          RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week1\\', ArchiveString, ' ', Vars[1], ' ', MainDir, 'Temp\\Week1\\', ForecastDate)
+          system(RarString)
+          RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week1\\', ArchiveString, ' ', Vars[2], ' ', MainDir, 'Temp\\Week1\\', ForecastDate)
+          system(RarString)
+          RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week1\\', ArchiveString, ' ', Vars[3], ' ', MainDir, 'Temp\\Week1\\', ForecastDate)
+          system(RarString)
+        }
+        ArchiveString = paste0('subX_reforecast_ECCC_', Year, format(ForecastDate, format='%m'), format(Week3, format='%d'), "00_m0", Member, '.tar')
+        if(!file.exists(paste0(MainDir, 'Temp\\Week3\\', ArchiveString))){
+          WgetString = paste0(MMDD3, ArchiveString)
+          CmdString = paste0(MainDir, '\\Processes\\wget.exe -r -p -nH --cut-dirs 6 -np -P ', MainDir, 'Temp\\Week3\\ robots=off ', WgetString)
+          system(CmdString)
+          
+          RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week3\\', ArchiveString, ' ', Vars[1], ' ', MainDir, 'Temp\\Week3\\', ForecastDate)
+          system(RarString)
+          RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week3\\', ArchiveString, ' ', Vars[2], ' ', MainDir, 'Temp\\Week3\\', ForecastDate)
+          system(RarString)
+          RarString = paste0('winrar e -inul ', MainDir, 'Temp\\Week3\\', ArchiveString, ' ', Vars[3], ' ', MainDir, 'Temp\\Week3\\', ForecastDate)
+          system(RarString)
+        }
       }
     }
   }
@@ -75,47 +77,50 @@ Week1Array = array(0, c(120,50,14,80,3))      #Lon, lat, day, year/mem - Week 1 
 Week3Array = array(0, c(120,50,7,80,3))      #Lon, lat, day, year/mem
 Week4Array = array(0, c(120,50,7,80,3))      #Lon, lat, day, year/mem
 
-for(Variable in 1:3){
-  
-  Files = list.files(paste0(MainDir, 'Temp\\Week1\\', ForecastDate, '\\'), pattern = Vars[Variable], full.names=TRUE)
-  
-  #Read in Week 1 at a lead time corresponding to weeks 3 and 4.
-  
-  Pos = 0
-  for(File in Files){
-    Pos = Pos + 1
-    OpenFile = nc_open(File)
-    OpenData = ncvar_get(OpenFile, OpenFile$var[[1]]$name)[211:330, 131:180, 15:28]
-    Week1Array[,,,Pos,Variable] = OpenData
-    nc_close(OpenFile)
+if(Week3 < LastDay){ #Similarly to above, don't try to read files if there's no need to download them. We can keep the bias corrections at zero - they won't do anything.
+
+  for(Variable in 1:3){
+    
+    Files = list.files(paste0(MainDir, 'Temp\\Week1\\', ForecastDate, '\\'), pattern = Vars[Variable], full.names=TRUE)
+    
+    #Read in Week 1 at a lead time corresponding to weeks 3 and 4.
+    
+    Pos = 0
+    for(File in Files){
+      Pos = Pos + 1
+      OpenFile = nc_open(File)
+      OpenData = ncvar_get(OpenFile, OpenFile$var[[1]]$name)[211:330, 131:180, 15:28]
+      Week1Array[,,,Pos,Variable] = OpenData
+      nc_close(OpenFile)
+    }
+    
+    Files = list.files(paste0(MainDir, 'Temp\\Week3\\', ForecastDate, '\\'), pattern = Vars[Variable], full.names=TRUE)
+    
+    #Read in week 3 at no lead time
+    
+    Pos = 0
+    for(File in Files){
+      Pos = Pos + 1
+      OpenFile = nc_open(File)
+      OpenData = ncvar_get(OpenFile, OpenFile$var[[1]]$name)[211:330, 131:180, 1:7]
+      Week3Array[,,,Pos,Variable] = OpenData
+      nc_close(OpenFile)
+    }
+    
+    Files = list.files(paste0(MainDir, 'Temp\\Week3\\', ForecastDate, '\\'), pattern = Vars[Variable], full.names=TRUE)
+    
+    #And again with week 4
+    
+    Pos = 0
+    for(File in Files){
+      Pos = Pos + 1
+      OpenFile = nc_open(File)
+      OpenData = ncvar_get(OpenFile, OpenFile$var[[1]]$name)[211:330, 131:180, 8:14]
+      Week4Array[,,,Pos,Variable] = OpenData
+      nc_close(OpenFile)
+    }
+    
   }
-  
-  Files = list.files(paste0(MainDir, 'Temp\\Week3\\', ForecastDate, '\\'), pattern = Vars[Variable], full.names=TRUE)
-  
-  #Read in week 3 at no lead time
-  
-  Pos = 0
-  for(File in Files){
-    Pos = Pos + 1
-    OpenFile = nc_open(File)
-    OpenData = ncvar_get(OpenFile, OpenFile$var[[1]]$name)[211:330, 131:180, 1:7]
-    Week3Array[,,,Pos,Variable] = OpenData
-    nc_close(OpenFile)
-  }
-  
-  Files = list.files(paste0(MainDir, 'Temp\\Week3\\', ForecastDate, '\\'), pattern = Vars[Variable], full.names=TRUE)
-  
-  #And again with week 4
-  
-  Pos = 0
-  for(File in Files){
-    Pos = Pos + 1
-    OpenFile = nc_open(File)
-    OpenData = ncvar_get(OpenFile, OpenFile$var[[1]]$name)[211:330, 131:180, 8:14]
-    Week4Array[,,,Pos,Variable] = OpenData
-    nc_close(OpenFile)
-  }
-  
 }
 
 Week1Mean = array(0, c(120,50,2,3))      #Lon, lat, day, year/mem - Week 1 needs to contain values for week 3 and 4 so it can compare both
@@ -123,6 +128,8 @@ Week3Mean = array(0, c(120,50,3))      #Lon, lat, day, year/mem
 Week4Mean = array(0, c(120,50,3))      #Lon, lat, day, year/mem
 
 #Go through location by location and generate a weekly mean. For week 1, this results in two means, corresponding to week 3 and to week 4.
+
+#In the case that no bias correction was needed, this will still generate the files so we don't run into errors. They will just have bias corrections of 0 - nothing happens.
 
 for(x in 1:120){
   for(y in 1:50){

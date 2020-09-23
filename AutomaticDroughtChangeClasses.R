@@ -125,6 +125,8 @@ for(Conf in seq(0.5, 1, 0.05)){
   for(Loc in 1:length(PreviousStates)){
     if(OutputClasses[Loc,4] >= Conf){
       ConditionalClass = c(ConditionalClass, OutputClasses[Loc,3])
+    } else if(OutputClasses[Loc,3] %in% c(1,3,4,5)){
+      ConditionalClass = c(ConditionalClass, 4)
     } else {
       ConditionalClass = c(ConditionalClass, 6)
     }
