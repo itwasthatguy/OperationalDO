@@ -142,3 +142,4 @@ OutputClassesThresh = cbind(OutputClasses, ConfThresh)
 colnames(OutputClassesThresh) = c('Lat', 'Lon', 'Class', 'Confidence', '50%', '55%', '60%', '65%', '70%', '75%', '80%', '85%', '90%', '95%', '100%')
 
 write.csv(OutputClassesThresh, OutputFile, quote = FALSE, row.names = FALSE)
+#edit for testing
