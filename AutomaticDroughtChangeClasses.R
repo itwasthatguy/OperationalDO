@@ -180,5 +180,3 @@ colnames(OutputClassesThreshTest) = c('Lat', 'Lon', 'Class', 'Confidence', '50%'
 
 write.csv(OutputClassesThresh, OutputFile, quote = FALSE, row.names = FALSE)
 write.csv(OutputClassesThreshTest, OutputFileMasked, quote = FALSE, row.names = FALSE)
-
-#edit for testing
