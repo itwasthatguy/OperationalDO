@@ -48,5 +48,14 @@ REM Another R script, calling the 'spei' package to calculated SPEI based on the
 
 REM "C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/Hindcasting/HindcastSPEI.R --args !StartDate! !EndDate! !MainDir!
 
+REM This process will classify the upcoming drought based on the indices calculated by previous steps
+
+"C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/Hindcasting/AutomaticClassification_Hind.R --args !StartDate! !MainDir!
+
+REM This process assigns change classes based on the *direction* of drought change
+
+"C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/Hindcasting/AutomaticDroughtChangeClasses_Hind.R --args !StartDate! !MainDir!
+
+
 pause
 

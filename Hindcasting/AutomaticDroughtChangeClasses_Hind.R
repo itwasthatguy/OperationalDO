@@ -1,9 +1,12 @@
-MainDir = 'D:\\Work\\AutomaticDO\\'
-Date = as.Date('2020-04-02')
-OutputFile = paste0(MainDir, 'Outcomes\\Updating\\ResultsClasses', Date, 'csv')
 
-ClassMainDir = paste0(MainDir, 'Outcomes\\Classifications\\Updating\\')
-PrevMainDir = paste0(MainDir, 'Outcomes\\Prior\\Updating\\')
+
+Date = as.Date(commandArgs(trailingOnly = TRUE)[2])
+MainDir = paste0(commandArgs(trailingOnly = TRUE)[3], '\\')
+
+OutputFile = paste0(MainDir, 'Outcomes\\ResultsClasses', Date, '.csv')
+
+ClassMainDir = paste0(MainDir, 'Outcomes\\Classifications\\')
+PrevMainDir = paste0(MainDir, 'Outcomes\\Prior\\')
 ClassDir = paste0(ClassMainDir, Date, '\\')
 PrevDir = paste0(PrevMainDir, Date, '\\')
 
@@ -12,15 +15,15 @@ Files = list.files(ClassDir, full.names=TRUE)
 Template = array(0, c(0, 3))
 
 LocsTotal = 0
-File = paste0(ClassDir, '1.csv')
+File = paste0(ClassDir, '0.csv')
 Data = read.csv(File)
 Template = rbind(Template, Data)
 Locs = dim(Data)[1]
 LocsTotal = LocsTotal + Locs
 
 
-DroughtArray = array(0, c(dim(Template)[1], 23))
-PreviousArray = array(0, c(dim(Template)[1], 23))
+DroughtArray = array(0, c(dim(Template)[1], 3))
+PreviousArray = array(0, c(dim(Template)[1], 3))
 
 DroughtArray[,1] = Template[,1]
 DroughtArray[,2] = Template[,2]
@@ -29,18 +32,18 @@ PreviousArray[,1] = Template[,1]
 PreviousArray[,2] = Template[,2]
 
 RowCount = 1
-for(Member in 1:21){
+for(Member in 0:0){
   File = paste0(ClassDir, Member, '.csv')
   Data = read.csv(File)
-  DroughtArray[,2 + Member] = Data[,3]
+  DroughtArray[,3] = Data[,3]
 }
 
 Files = list.files(PrevDir, full.names=TRUE)
 
-for(Member in 1:21){
+for(Member in 0:0){
   File = paste0(PrevDir, Member, '.csv')
   Data = read.csv(File)
-  PreviousArray[,2 + Member] = Data[,3]
+  PreviousArray[,3] = Data[,3]
 }
 
 PreviousStates = PreviousArray[,3]
@@ -49,7 +52,7 @@ ProbabilityArray = array(0, c(dim(DroughtArray)[1], 6))
 
 for(Drought in 0:5){
   for(Loc in 1:dim(DroughtArray)[1]){
-    ProbabilityArray[Loc, Drought+1] = (length(which(DroughtArray[Loc,] == Drought))/21)
+    ProbabilityArray[Loc, Drought+1] = (length(which(DroughtArray[Loc,] == Drought))/1)
   }
 }
 
@@ -79,13 +82,13 @@ OutputClasses = array(0, c(length=length(PreviousStates), 4))
 OutputClasses[,1:2] = DroughtArray[,1:2]
 
 for(ChangeDrought in DroughtToDrought){
-  Droughts = DroughtArray[ChangeDrought,3:23]
+  Droughts = DroughtArray[ChangeDrought,3]
   Lower = which((1:6) < PreviousStates[ChangeDrought])
   Same = which((1:6) == PreviousStates[ChangeDrought])
   Higher = which((1:6) > PreviousStates[ChangeDrought])
   
   if(length(Lower) > 0){
-    DownChange = length(which(Droughts %in% Lower))/21
+    DownChange = length(which(Droughts %in% Lower))/1
   } else {
     DownChange = 0
   }
@@ -93,12 +96,12 @@ for(ChangeDrought in DroughtToDrought){
   DownChange = DownChange + ChanceNoDrought[ChangeDrought]
   
   if(length(Higher) > 0){
-    UpChance = length(which(Droughts %in% Higher))/21
+    UpChance = length(which(Droughts %in% Higher))/1
   } else {
     UpChance = 0
   }
   
-  SameChance = length(which(Droughts %in% Same))/21
+  SameChance = length(which(Droughts %in% Same))/1
   Direction = which.max(c(DownChange, SameChance, UpChance))    #1 for lower, 2 for same, 3 for higher
   Conf = max(c(DownChange, SameChance, UpChance))               #And confidence of it
   

@@ -16,7 +16,7 @@ library(foreach)
 ######### Set the date and the directory accordingly!
 
 MainDirectory = 'D:\\Work\\AutomaticDO\\'
-ForecastDate = as.Date("2020-05-07")
+ForecastDate = as.Date("2020-08-06")
 
 #########
 
@@ -27,8 +27,8 @@ IndexCount = (12*2) + 1 + 2 + 2 + 1 + 7  #Not just indices - 12 months of SPI, S
 TrainGroups = list(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15))
 ClassifyGroups = list(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15))
 
-ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\ClassificationsPCA\\")
-PreviousOutputDir = paste0(MainDirectory, "Outcomes\\Prior\\")
+ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\Classifications\\Updating\\")
+PreviousOutputDir = paste0(MainDirectory, "Outcomes\\Prior\\Updating\\")
 
 TrainingDataFile = paste0(MainDirectory, 'Historical\\FullTrainingData.csv')
 TrainingData = read.csv(TrainingDataFile)
@@ -235,6 +235,7 @@ history = model %>% fit(
 )
 
 FullOut = c()
+Counter = 1
 
 for(Mem in 1:21){
   DataArray = PredictArray[Mem,,]
@@ -273,7 +274,7 @@ for(Mem in 1:21){
   ResultsClass = apply(Results, 1, FUN = which.max) - 1
   
   #table(ResultsClass, YPredict)
-  #table(ResultsClass, XPredictSub[,11])
+  table(ResultsClass, XPredictSub[,12])
   
   Output = cbind(DataArray[,1], DataArray[,2])
   Output = cbind(Output, ResultsClass)
@@ -281,13 +282,13 @@ for(Mem in 1:21){
   #View(XPredict[which(ResultsClass == 1),])
   
   if(!dir.exists(paste0(ClassificationOutputDir, ForecastDate, '\\'))) dir.create(paste0(ClassificationOutputDir, ForecastDate, '\\'))
-  write.csv(Output, paste0(ClassificationOutputDir, ForecastDate, '\\', Mem, '_', Counter, '.csv'), row.names=FALSE, quote=FALSE)
+  write.csv(Output, paste0(ClassificationOutputDir, ForecastDate, '\\', Mem, '.csv'), row.names=FALSE, quote=FALSE)
   
   Output = cbind(DataArray[,1], DataArray[,2])
-  Output = cbind(Output, DataArray[,31])
+  Output = cbind(Output, XPredictSub[,12])
   
   if(!dir.exists(paste0(PreviousOutputDir, ForecastDate, '\\'))) dir.create(paste0(PreviousOutputDir, ForecastDate, '\\'))
-  write.csv(Output, paste0(PreviousOutputDir, ForecastDate, '\\', Mem, '_', Counter, '.csv'), row.names=FALSE, quote=FALSE)
+  write.csv(Output, paste0(PreviousOutputDir, ForecastDate, '\\', Mem, '.csv'), row.names=FALSE, quote=FALSE)
   
   if(Mem == 1) FullOut = cbind(FullOut, DataArray[,1], DataArray[,2])
   FullOut = cbind(FullOut, ResultsClass)

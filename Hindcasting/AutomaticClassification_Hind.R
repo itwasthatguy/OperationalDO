@@ -15,9 +15,8 @@ library(foreach)
 
 ######### Set the date and the directory accordingly!
 
-MainDirectory = 'D:\\Work\\AutomaticDO\\'
-HindcastDate = as.Date("2020-08-31")
-
+HindcastDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
+MainDirectory = paste0(commandArgs(trailingOnly = TRUE)[3], '\\')
 
 #########
 
@@ -39,8 +38,8 @@ IndexCount = (12*2) + 1 + 2 + 2 + 1 + 7  #Not just indices - 12 months of SPI, S
 TrainGroups = list(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15))
 ClassifyGroups = list(c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15))
 
-ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\ClassificationsPCA\\")
-PreviousOutputDir = paste0(MainDirectory, "Outcomes\\PriorPCA\\")
+ClassificationOutputDir = paste0(MainDirectory, "Outcomes\\Classifications\\")
+PreviousOutputDir = paste0(MainDirectory, "Outcomes\\Prior\\")
 
 TrainingDataFile = paste0(MainDirectory, 'Historical\\FullTrainingData.csv')
 TrainingData = read.csv(TrainingDataFile)
@@ -269,7 +268,7 @@ if(!dir.exists(paste0(ClassificationOutputDir, HindcastDate, '\\'))) dir.create(
 write.csv(Output, paste0(ClassificationOutputDir, HindcastDate, '\\', Mem, '.csv'), row.names=FALSE, quote=FALSE)
 
 Output = cbind(DataArray[,1], DataArray[,2])
-Output = cbind(Output, XPredictSub[,12])
+Output = cbind(Output, XPredictSub[,8])
 
 if(!dir.exists(paste0(PreviousOutputDir, HindcastDate, '\\'))) dir.create(paste0(PreviousOutputDir, HindcastDate, '\\'))
 write.csv(Output, paste0(PreviousOutputDir, HindcastDate, '\\', Mem, '.csv'), row.names=FALSE, quote=FALSE)
