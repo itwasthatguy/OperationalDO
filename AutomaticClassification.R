@@ -10,7 +10,21 @@ library(parallel)
 library(doParallel)
 library(foreach)
 
-######### Set the date and the directory accordingly!
+EnsembleMeanWrite = function(AllData, IndicatorsPath){    #AllData must be a 3d array - ensemble x point x indicator
+  class(AllData) = "numeric"
+  AllData[which(is.infinite(AllData))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
+  AllData[which(is.na(AllData))] = -4
+  EnsembleMeans = array(0, c(dim(AllData)[2:3]))
+  for(i in 1:dim(AllData)[2]){
+    EnsembleMeans[i,] = apply(AllData[,i,], 2, mean)
+  }
+  colnames(EnsembleMeans) = c('Lat', 'Lon', 'Year', 'Month', 'SPI1', 'SPI2', 'SPI3', 'SPI4', 'SPI5', 'SPI6', 'SPI7', 'SPI8', 'SPI9', 'SPI10', 'SPI11', 'SPI12'  , 'SPEI1', 'SPEI2', 'SPEI3', 'SPEI4', 'SPEI5', 'SPEI6', 'SPEI7', 'SPEI8', 'SPEI9','SPEI10', 'SPEI11', 'SPEI12',  'PDI', 'Drought', 'Drought-1', 'Drought-2', 'Drought-3', 'Drought-4', 'Drought-5', 'Drought-6', 'EcoZone')
+  
+  write.csv(EnsembleMeans, IndicatorsPath, quote=FALSE, row.names = FALSE)
+  
+}
+
+######### Set the date and the directory accodingly!
 
 ForecastDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
 MainDirectory = paste0(commandArgs(trailingOnly = TRUE)[3], '\\')
@@ -35,6 +49,7 @@ SPEIForecastDir = paste0(MainDirectory, 'Indices\\SPEI\\', ForecastDate, '\\')
 PDIForecastDir = paste0(MainDirectory, 'Indices\\PDI\\', ForecastDate, '\\')
 ForecastDroughtFile = paste0(MainDirectory, 'Indices\\CDM_Previous\\', ForecastDate, '\\CDM.csv')
 EcoZonesFile = paste0(MainDirectory, '\\Misc\\PointLocationsEco.csv')
+IndicatorsOutput = paste0(MainDirectory, 'Indices\\EnsembleMeans\\', ForecastDate, '.csv')
 
 #SPIForecastDir0 = paste0(SPIForecastDir, '0', '\\')
 #SPEIForecastDir0 = paste0(SPEIForecastDir, '0', '\\')
@@ -151,6 +166,8 @@ colnames(TrainMatFull) = c('Lat', 'Lon', 'Year', 'Month', 'SPI1', 'SPI2', 'SPI3'
 
 #Now we loop through groupings of ecozones
 TrainMatFullbk = TrainMatFull
+
+EnsembleMeanWrite(PredictArray, IndicatorsOutput)
 
 TrainGroup = 1:15
 ClassifyGroup = 1:15
