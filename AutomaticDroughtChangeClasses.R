@@ -123,7 +123,6 @@ OutputClasses[DroughtToClear,4] = Confidences[DroughtToClear]
 OutputClasses[ClearToClear,3] = 0
 OutputClasses[ClearToClear,4] = Confidences[ClearToClear]
 
-
 ConfThresh = c()
 for(Conf in seq(0.5, 1, 0.05)){
   ConditionalClass = c()
@@ -168,8 +167,8 @@ MaskOut = st_intersection(OutPoints, Mask)
 IndexLocs = as.integer(rownames(MaskOut))
 PointDataMask = OutPoints[IndexLocs,]
 
-PointDataMask[which(PointDataMask$Class == 2),1] = 0
-PointDataMask[which(PointDataMask$Class %in% c(1,3,4,5)),1] = 4
+PointDataMask[which(PointDataMask$Class == 2),c(1, 3:13)] = 0
+PointDataMask[which(PointDataMask$Class %in% c(1,3,4,5)),c(1, 3:13)] = 4
 
 OutPoints[IndexLocs,] = PointDataMask
 OutputClassesThreshTest = as.data.frame(OutPoints)[,1:13]
