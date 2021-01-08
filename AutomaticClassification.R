@@ -4,6 +4,7 @@
 
 #A crude pseudo-equation for the classification is as follows:  Predicted drought = Prior drought + monthly drought indices + month of the year + ecozone
 
+#You should not see this
 
 library(keras)
 library(parallel)
