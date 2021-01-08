@@ -1,7 +1,5 @@
 library(sf)
 
-#but you should see this
-
 Date = as.Date(commandArgs(trailingOnly = TRUE)[2])
 MainDir = paste0(commandArgs(trailingOnly = TRUE)[3], '\\')
 
