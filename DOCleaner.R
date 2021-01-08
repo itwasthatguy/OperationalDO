@@ -1,5 +1,6 @@
 #Delete last month's files
 
+#Recursively find the first thursday from the first day of the month
 GoToThurs = function(Day){
   if(weekdays(Day) == 'Thursday'){
     return(Day)
@@ -15,8 +16,6 @@ DeleteCurrent = FALSE
 
 ForecastMainDir = paste0(MainDirectory, 'MonthlyForecasts\\')
 AccumulateMainDir = paste0(MainDirectory, 'MonthlyForecasts\\AccumulatedPrecip\\')
-BCWeek1Dir = paste0(MainDirectory, 'Temp\\Week1\\')
-BCWeek3Dir = paste0(MainDirectory, 'Temp\\Week3\\')
 PDIDir = paste0(MainDirectory, 'Indices\\PDI\\')
 SPIDir = paste0(MainDirectory, 'Indices\\SPI\\')
 SPEIDir = paste0(MainDirectory, 'Indices\\SPEI\\')
@@ -43,31 +42,8 @@ PreviousDate = GoToThurs(PreviousDate)
 
 
 for(DelDir in AllDirs){
-  if(dir.exists(paste0(ForecastMainDir, DelDir))){
+  if(dir.exists(DelDir)){
     setwd(DelDir)
-    unlink(PreviousMonth, recursive=TRUE, force=TRUE)
+    unlink(PreviousDate, recursive=TRUE, force=TRUE)
   }
-}
-
-TarFiles = list.files(BCWeek1Dir, pattern = '.tar')
-if(length(TarFiles > 0)){
-  setwd(BCWeek1Dir)
-  unlink(TarFiles)
-}
-
-TarFiles = list.files(BCWeek3Dir, pattern = '.tar')
-if(length(TarFiles > 0)){
-  setwd(BCWeek3Dir)
-  unlink(TarFiles)
-}
-
-if(DeleteCurrent){
-  
-  for(DelDir in AllDirs){
-    if(dir.exists(paste0(ForecastMainDir, DelDir))){
-      setwd(DelDir)
-      unlink(ForecastDate, recursive=TRUE, force=TRUE)
-    }
-  }
-  
 }
