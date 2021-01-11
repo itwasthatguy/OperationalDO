@@ -23,7 +23,7 @@ REM Bias corrections are fit on a per-forecast basis, so this step will require 
 
 REM Deletes hindcast data downloaded to fit the bias corrections
 
-"C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/DOCleaner.R --args !StartDate! !MainDir!
+"C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/HindCleaner.R --args !StartDate! !MainDir!
 
 REM Reads the already downloaded forecast gribs and converts them to CSV. These are not yet the long form forecasts, just the latest month. Generates ../MonthlyForecasts/YYYY-MM-DDCSV/..
 
