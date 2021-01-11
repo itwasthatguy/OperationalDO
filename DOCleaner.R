@@ -20,7 +20,7 @@ PDIDir = paste0(MainDirectory, 'Indices\\PDI\\')
 SPIDir = paste0(MainDirectory, 'Indices\\SPI\\')
 SPEIDir = paste0(MainDirectory, 'Indices\\SPEI\\')
 
-AllDirs = c(ForecastMainDir, AccumulateMainDir, BCWeek1Dir, BCWeek3Dir, PDIDir, SPIDir, SPEIDir)
+AllDirs = c(ForecastMainDir, AccumulateMainDir, PDIDir, SPIDir, SPEIDir)
 
 Year = as.integer(format(ForecastDate, format='%Y'))
 Month = as.integer(format(ForecastDate, format='%m'))
