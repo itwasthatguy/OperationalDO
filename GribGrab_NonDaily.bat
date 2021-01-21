@@ -50,4 +50,4 @@ REM YYYY-MM-DD 		The dashes are neccessary
 set DateHyphen=%DATE:~0,4%-%DATE:~5,2%-%DATE:~8,2%
 
 REM R script to append daily forecast values into CSV files
-"C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !Dir!/Processes/Prepare24HForecastGribsAuto.R --args !DateHyphen! !Dir!
+"C:/Program Files/R/R-3.6.1/bin/x64/Rscript" !Dir!/Processes/DailyUpdate.R --args !DateHyphen! !Dir!
