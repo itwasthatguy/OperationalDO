@@ -206,7 +206,7 @@ WriteLocalFiles = function(){
 CurrentDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
 CurrentDateFormat = format(CurrentDate, '%Y%m%d')
 MainDir = paste0(commandArgs(trailingOnly = TRUE)[3], '\\')
-NetworkLocation = '\\skyemci01-eo.efs.agr.gc.ca\\projects\\droughtOutlook\\Operational\\'
+NetworkLocation = '\\\\skyemci01-eo.efs.agr.gc.ca\\projects\\droughtOutlook\\Operational\\'
 
 LogFile = paste0(NetworkLocation, 'DailyLog.txt')
 LoggingFile = paste0(NetworkLocation, 'CurrentlyLogging.txt')
