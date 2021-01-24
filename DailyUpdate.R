@@ -116,8 +116,8 @@ WriteToServer = function(){
   
   UpdateString = paste0('Updated by ', UniqueID, ' at date ', CurrentDate)
   
-  LogData = rbind(LogData, unlist(strsplit(UpdateString, ' ')))
-  write.table(LogData, LogFile, quote=FALSE, row.names=FALSE, col.names = FALSE)
+  LogData = c(LogData, UpdateString)
+  writelines(LogData, LogFile)
 
 }
 
@@ -255,7 +255,6 @@ if(file.exists(LoggingFile)){
 write.table(LoggingText, LoggingFile, row.names= FALSE, col.names = FALSE, quote=FALSE)
 
 LogData = readLines(LogFile)
-LogData = LogData[length(LogData)]
 LastRecord = as.Date(unlist(strsplit(LogData, ' '))[length(unlist(strsplit(LogData, ' ')))])
 
 SampleLocal = read.csv(paste0(LocalDir, LocalFiles[1]))
