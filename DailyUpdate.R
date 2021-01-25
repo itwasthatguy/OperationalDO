@@ -117,7 +117,7 @@ WriteToServer = function(){
   UpdateString = paste0('Updated by ', UniqueID, ' at date ', CurrentDate)
   
   LogData = c(LogData, UpdateString)
-  writelines(LogData, LogFile)
+  writeLines(LogData, LogFile)
 
 }
 
