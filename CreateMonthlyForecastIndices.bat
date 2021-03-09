@@ -31,7 +31,7 @@ REM Reads the already downloaded forecast gribs and converts them to CSV. These 
 
 REM Takes the CSV from previous and appends it to the ongoing timeseries of forecasts. Applies a transform to the newer data (the ongoing timeseries is pre-transformed). The transformation is pre-generated and can be applied on the fly, unlike the bias correction. Generates ../MonthlyForecasts/YYYY-MM-DDForecast/..
 
-"C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/CorrectAndAppendForecasts_MapAll.R --args !StartDate! !EndDate! !MainDir!
+"C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/CorrectAndAppendForecasts_MapAll_Pareto.R --args !StartDate! !EndDate! !MainDir!
 
 REM Sums monthly precip and formats for reading into Richard's SPI program. Generates ../MonthlyForecasts/AccumulatedPrecip/YYYY-MM-DD/..
 
