@@ -88,20 +88,6 @@ UserPauseFunction = function(){
 
 ReadFromServer = function(){
   
-  LoggingText = rbind('Records are currently being accessed. Please come back in a few minutes, and do not do ***ANYTHING*** to this file.', UniqueID)
-  
-  if(file.exists(LoggingFile)){
-    WhoIsUpdating = read.csv(LoggingFile, header = FALSE)[2,1]
-    if(WhoIsUpdating == UniqueID){
-      setwd(NetworkLocation)
-      unlink(LoggingFile)
-    } else {
-      RepeatWait(LoggingFile)
-    }
-  }
-  
-  write.table(LoggingText, LoggingFile, row.names= FALSE, col.names = FALSE, quote=FALSE)
-  
   for(File in ServerFiles){
     ServerFile = paste0(ServerDir, File)
     LocalFile = paste0(LocalDir, File)
@@ -113,26 +99,9 @@ ReadFromServer = function(){
     
   }
   
-  setwd(NetworkLocation)
-  unlink(LoggingFile)
-  
 }
 
 WriteToServer = function(){
-  
-  LoggingText = rbind('Records are currently being accessed. Please come back in a few minutes, and do not do ***ANYTHING*** to this file.', UniqueID)
-  
-  if(file.exists(LoggingFile)){
-    WhoIsUpdating = read.csv(LoggingFile, header = FALSE)[2,1]
-    if(WhoIsUpdating == UniqueID){
-      setwd(NetworkLocation)
-      unlink(LoggingFile)
-    } else {
-      RepeatWait(LoggingFile)
-    }
-  }
-  
-  write.table(LoggingText, LoggingFile, row.names= FALSE, col.names = FALSE, quote=FALSE)
   
   for(File in ServerFiles){
     ServerFile = paste0(ServerDir, File)
@@ -147,10 +116,9 @@ WriteToServer = function(){
   
   UpdateString = paste0('Updated by ', UniqueID, ' at date ', CurrentDate)
   
-  LogData = rbind(LogData, unlist(strsplit(UpdateString, ' ')))
-  write.table(LogData, LogFile, quote=FALSE, row.names=FALSE, col.names = FALSE)
-  setwd(NetworkLocation)
-  unlink(LoggingFile)
+  LogData = c(LogData, UpdateString)
+  writeLines(LogData, LogFile)
+
 }
 
 WriteLocalFiles = function(){
@@ -238,7 +206,7 @@ WriteLocalFiles = function(){
 CurrentDate = as.Date(commandArgs(trailingOnly = TRUE)[2])
 CurrentDateFormat = format(CurrentDate, '%Y%m%d')
 MainDir = paste0(commandArgs(trailingOnly = TRUE)[3], '\\')
-NetworkLocation = 'R:\\droughtOutlook\\Operational\\'
+NetworkLocation = '\\\\skyemci01-eo.efs.agr.gc.ca\\projects\\droughtOutlook\\Operational\\'
 
 LogFile = paste0(NetworkLocation, 'DailyLog.txt')
 LoggingFile = paste0(NetworkLocation, 'CurrentlyLogging.txt')
@@ -272,8 +240,21 @@ if(!(identical(LocalFiles, ServerFiles))){
   quit()
 }
 
+LoggingText = rbind('Records are currently being accessed. Please come back in a few minutes, and do not do ***ANYTHING*** to this file.', UniqueID)
+
+if(file.exists(LoggingFile)){
+  WhoIsUpdating = read.csv(LoggingFile, header = FALSE)[2,1]
+  if(WhoIsUpdating == UniqueID){
+    setwd(NetworkLocation)
+    unlink(LoggingFile)
+  } else {
+    RepeatWait(LoggingFile)
+  }
+}
+
+write.table(LoggingText, LoggingFile, row.names= FALSE, col.names = FALSE, quote=FALSE)
+
 LogData = readLines(LogFile)
-LogData = LogData[length(LogData)]
 LastRecord = as.Date(unlist(strsplit(LogData, ' '))[length(unlist(strsplit(LogData, ' ')))])
 
 SampleLocal = read.csv(paste0(LocalDir, LocalFiles[1]))
@@ -353,3 +334,6 @@ if(LastRecord == CurrentDate){
     
   }
 }
+
+setwd(NetworkLocation)
+unlink(LoggingFile)
