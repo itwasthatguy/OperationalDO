@@ -4,10 +4,19 @@
 
 #A crude pseudo-equation for the classification is as follows:  Predicted drought = Prior drought + monthly drought indices + month of the year + ecozone
 
+
 library(keras)
 library(parallel)
 library(doParallel)
 library(foreach)
+
+Normalize = function(InVec, Max, Min){
+  OutVec = (InVec - Min) / (Max - Min)
+  #Won't affect the training run, but forecast values outside range will be set to the min or max 
+  OutVec[which(OutVec > 1)] = 1
+  OutVec[which(OutVec < 0)] = 0
+  return(OutVec)
+}
 
 EnsembleMeanWrite = function(AllData, IndicatorsPath){    #AllData must be a 3d array - ensemble x point x indicator
   class(AllData) = "numeric"
@@ -49,6 +58,8 @@ PDIForecastDir = paste0(MainDirectory, 'Indices\\PDI\\', ForecastDate, '\\')
 ForecastDroughtFile = paste0(MainDirectory, 'Indices\\CDM_Previous\\', ForecastDate, '\\CDM.csv')
 EcoZonesFile = paste0(MainDirectory, '\\Misc\\PointLocationsEco.csv')
 IndicatorsOutput = paste0(MainDirectory, 'Indices\\EnsembleMeans\\', ForecastDate, '.csv')
+
+if(!dir.exists(paste0(MainDirectory, 'Indices\\EnsembleMeans\\'))) dir.create(paste0(MainDirectory, 'Indices\\EnsembleMeans\\'))
 
 #SPIForecastDir0 = paste0(SPIForecastDir, '0', '\\')
 #SPEIForecastDir0 = paste0(SPEIForecastDir, '0', '\\')
@@ -178,31 +189,22 @@ TrainMatChangeNot = TrainMatZone[which(TrainMatZone[,30] == TrainMatZone[,31]),]
 
 SubSampleMat = TrainMatChange[which(TrainMatChange[,30] >= 4),]
 
-Samp = sample(which(TrainMatChangeNot[,30] == 4), size =400)
+Samp = sample(which(TrainMatChange[,30] == 4), size = min(c(500, length(which(TrainMatChange[,30] == 4)))))
 SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
-Samp = sample(which(TrainMatChange[,30] == 3), size = 1300)
+Samp = sample(which(TrainMatChange[,30] == 3), size = min(c(1600, length(which(TrainMatChange[,30] == 3)))))
 SubSampleMat = rbind(SubSampleMat, TrainMatChange[Samp,])
-Samp = sample(which(TrainMatChange[,30] == 2), size = 2000)
+Samp = sample(which(TrainMatChange[,30] == 2), size = min(c(3300, length(which(TrainMatChange[,30] == 2)))))
 SubSampleMat = rbind(SubSampleMat, TrainMatChange[Samp,])
-Samp = sample(which(TrainMatChange[,30] == 1), size = 10000)
+Samp = sample(which(TrainMatChange[,30] == 1), size = min(c(3500, length(which(TrainMatChange[,30] == 1)))))
 SubSampleMat = rbind(SubSampleMat, TrainMatChange[Samp,])
-Samp = sample(which(TrainMatChange[,30] == 0), size = 8000)
+Samp = sample(which(TrainMatChange[,30] == 0), size = min(c(3500, length(which(TrainMatChange[,30] == 0)))))
 SubSampleMat = rbind(SubSampleMat, TrainMatChange[Samp,])
-
-Samp = sample(which(TrainMatChangeNot[,30] == 3), size = 100)
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
-Samp = sample(which(TrainMatChangeNot[,30] == 2), size = 200)
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
-Samp = sample(which(TrainMatChangeNot[,30] == 1), size = 1000)
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
-Samp = sample(which(TrainMatChangeNot[,30] == 0), size = 500)
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot[Samp,])
 
 
 attr(TrainMatZone, 'dimnames') = NULL
 attr(SubSampleMat, 'dimnames') = NULL
 
-XTrain = as.array(SubSampleMat[,c(4:29,31,37)])
+XTrain = as.array(SubSampleMat[,c(4:29,31)])
 XTrain[which(is.infinite(XTrain))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
 XTrain[which(is.na(XTrain))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
 YTrain = as.array(SubSampleMat[,30])
@@ -212,17 +214,34 @@ length(which(YTrain == 4))
 
 if(length(YTrain) == 0) next
 
-XTrainSub = XTrain[,c(1,2:6,14:18,27)]
-XTrainSub[which(XTrainSub[,12] == 0),12] = 1
-XTrainSub[,12] = XTrainSub[,12] - 1
+XTrainSub = XTrain[,c(1,2:5,14:17,27)]
+XTrainSub[which(XTrainSub[,10] == 0),10] = 1
+XTrainSub[,10] = XTrainSub[,10] - 1
 
-pca = prcomp(XTrainSub[,c(1:(dim(XTrainSub)[2]))], scale=TRUE)
+XTrainSubNorm = XTrainSub
+NormMaxes = c()
+NormMins = c()
+for(i in 1:dim(XTrainSubNorm)[2]){
+  NormMax = max(XTrainSubNorm[,i])
+  NormMin = min(XTrainSubNorm[,i])
+  
+  NormMaxes = c(NormMaxes, NormMax)
+  NormMins = c(NormMins, NormMin)
+  
+  XTrainSubNorm[,i] = Normalize(XTrainSubNorm[,i], NormMax, NormMin)
+  
+}
 
-Input = cbind(pca$x[,1:8], XTrain[,28])
-Loading = pca$rotation[,1:8]
+pca = prcomp(XTrainSubNorm, scale=TRUE)
 
 YTrain[which(YTrain == 0)] = 1
 YTrain = YTrain - 1
+
+Input = pca$x[,1:8]
+
+Random = sample(1:length(YTrain), length(YTrain), replace = FALSE)
+Input = Input[Random,]
+YTrain = YTrain[Random]
 
 
 #########
@@ -257,7 +276,7 @@ for(Mem in 1:21){
   DataArray = DataArray[which(DataArray[,37] %in% ClassifyGroup),]
   class(DataArray) = 'numeric'
   
-  XPredict = as.array(DataArray[,c(4:29,31,37)])
+  XPredict = as.array(DataArray[,c(4:29,31)])
   XPredict[which(is.infinite(XPredict))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
   XPredict[which(is.na(XPredict))] = -4        #Assume all infs are neg infs in spi or spei caused by 0 precip months
   YPredict = as.array(DataArray[,30])
@@ -265,22 +284,19 @@ for(Mem in 1:21){
   
   if(length(YPredict) == 0) next
   
-  #XPredict[which(XPredict[,27] == 0),27] = 1
-  #XPredict[,27] = XPredict[,27] - 1
-  XPredictSub = XPredict[,c(1,2:6,14:18,27)]
+  XPredictSub = XPredict[,c(1,2:5,14:17,27)]
   
-  XPredictSub[which(XPredictSub[,12] == 0),12] = 1
-  XPredictSub[,12] = XPredictSub[,12] - 1
+  XPredictSub[which(XPredictSub[,10] == 0),10] = 1
+  XPredictSub[,10] = XPredictSub[,10] - 1
   
-  Loaded = array(0, c(dim(XPredictSub)[1], dim(Input)[2]-1))
-  
-  for(Row in 1:dim(XPredictSub)[1]){
-    for(Comp in 1:dim(Input)[2]-1){
-      Loaded[Row,Comp] = sum(XPredictSub[Row,] * Loading[,Comp])
-    }
+  XPredictSubNorm = XPredictSub
+  for(i in 1:dim(XPredictSubNorm)[2]){
+    
+    XPredictSubNorm[,i] = Normalize(XPredictSubNorm[,i], NormMaxes[i], NormMins[i])
+    
   }
   
-  Loaded = cbind(Loaded, XPredict[,28])
+  Loaded = predict(pca, XPredictSubNorm)[,1:8]
   
   YPredict[which(YPredict == 0)] = 1
   YPredict = YPredict - 1
@@ -289,7 +305,9 @@ for(Mem in 1:21){
   ResultsClass = apply(Results, 1, FUN = which.max) - 1
   
   #table(ResultsClass, YPredict)
-  table(ResultsClass, XPredictSub[,12])
+  table(ResultsClass, XPredictSub[,10])
+  
+  #View(cbind(DataArray, ResultsClass))
   
   Output = cbind(DataArray[,1], DataArray[,2])
   Output = cbind(Output, ResultsClass)
@@ -300,7 +318,7 @@ for(Mem in 1:21){
   write.csv(Output, paste0(ClassificationOutputDir, ForecastDate, '\\', Mem, '.csv'), row.names=FALSE, quote=FALSE)
   
   Output = cbind(DataArray[,1], DataArray[,2])
-  Output = cbind(Output, XPredictSub[,12])
+  Output = cbind(Output, XPredictSub[,10])
   
   if(!dir.exists(paste0(PreviousOutputDir, ForecastDate, '\\'))) dir.create(paste0(PreviousOutputDir, ForecastDate, '\\'))
   write.csv(Output, paste0(PreviousOutputDir, ForecastDate, '\\', Mem, '.csv'), row.names=FALSE, quote=FALSE)
