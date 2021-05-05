@@ -94,7 +94,7 @@ AllMap = foreach(i=1:20)%dopar%{
       ObsMonth = ObsPrecip[MonthDaysGrid[[Month]]]
       HindMonth = HindData[MonthDaysHind[[Month]], 1:4]
       
-      CountRows = dim(HindMonth)[1]                                         #Because rbind is retarded
+      CountRows = dim(HindMonth)[1]                                         #Because rbind is dumb
       HindMonthCombine = array(0, c(CountRows * 4))
       HindMonthCombine[1:CountRows] = HindMonth[,1]
       HindMonthCombine[(CountRows + 1):(CountRows*2)] = HindMonth[,1]
@@ -116,7 +116,7 @@ AllMap = foreach(i=1:20)%dopar%{
       HindMonth = HindData[MonthDaysHind[[Month]], 5:8] - 273.15
       
       
-      CountRows = dim(HindMonth)[1]                                         #Because rbind is retarded
+      CountRows = dim(HindMonth)[1]                                         #Because rbind is dumb
       HindMonthCombine = array(0, c(CountRows * 4))
       HindMonthCombine[1:CountRows] = HindMonth[,1]
       HindMonthCombine[(CountRows + 1):(CountRows*2)] = HindMonth[,1]
