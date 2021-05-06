@@ -109,12 +109,21 @@ for(ChangeDrought in DroughtToDrought){
   Direction = which.max(c(DownChange, SameChance, UpChance))    #1 for lower, 2 for same, 3 for higher
   Conf = max(c(DownChange, SameChance, UpChance))               #And confidence of it
   
-  OutputClasses[ChangeDrought,3] = Direction + 2
-  OutputClasses[ChangeDrought,4] = Conf
+  if(Direction == 1){ #Reduction
+    OutputClasses[ChangeDrought,3] = 2
+    OutputClasses[ChangeDrought,4] = Conf
+  } else if(Direction == 2){ #Reduction
+    OutputClasses[ChangeDrought,3] = 4
+    OutputClasses[ChangeDrought,4] = Conf
+  } else if(Direction == 3){ #Reduction
+    OutputClasses[ChangeDrought,3] = 5
+    OutputClasses[ChangeDrought,4] = Conf
+  }
+  
   
 }
 
-OutputClasses[ClearToDrought,3] = 2
+OutputClasses[ClearToDrought,3] = 3
 OutputClasses[ClearToDrought,4] = Confidences[ClearToDrought]
 
 OutputClasses[DroughtToClear,3] = 1
@@ -129,7 +138,7 @@ for(Conf in seq(0.5, 1, 0.05)){
   for(Loc in 1:length(PreviousStates)){
     if(OutputClasses[Loc,4] >= Conf){
       ConditionalClass = c(ConditionalClass, OutputClasses[Loc,3])
-    } else if(OutputClasses[Loc,3] %in% c(1,3,4,5)){
+    } else if(OutputClasses[Loc,3] %in% c(1,2,4,5)){
       ConditionalClass = c(ConditionalClass, 4)
     } else {
       ConditionalClass = c(ConditionalClass, 6)
@@ -167,8 +176,8 @@ MaskOut = st_intersection(OutPoints, Mask)
 IndexLocs = as.integer(rownames(MaskOut))
 PointDataMask = OutPoints[IndexLocs,]
 
-PointDataMask[which(PointDataMask$Class == 2),c(1, 3:13)] = 0
-PointDataMask[which(PointDataMask$Class %in% c(1,3,4,5)),c(1, 3:13)] = 4
+PointDataMask[which(PointDataMask$Class == 3),c(1, 3:13)] = 0
+PointDataMask[which(PointDataMask$Class %in% c(1,2,4,5)),c(1, 3:13)] = 4
 
 OutPoints[IndexLocs,] = PointDataMask
 OutputClassesThreshTest = as.data.frame(OutPoints)[,1:13]
