@@ -26,7 +26,7 @@ strCDMDir = paste0(MainDir, '\\CDM\\')
 strPtsTemplatePath = paste0(MainDir, '\\Misc\\PointLocations.csv')
 strOutputDir = paste0(MainDir,'\\Indices\\CDM_Previous\\', ForecastDate,'\\')
 
-NetworkLocation = '\\\\SKYEMCI01-CIFS.efs.agr.gc.ca\\data\\skregivfs307_Group\\Agroclimate\\agroclimpub\\03_OPERATIONS\\CDM_NADM\\PRODUCTS\\'
+NetworkLocation = '\\\\skyemci01-eo.efs.agr.gc.ca\\projects\\naisGis\\CDM\\Monthly_Shapefiles\\Final\\2021\\'
 
 #Extract month and year as numeric values
 
@@ -64,7 +64,7 @@ if(intYear < 10){
 #Something to grab the file from the network
 #GrabLoc = 'D:\\Work\\AutomaticDO\\2007'
 
-GrabLoc = paste0(NetworkLocation, substr(strDateFolder, 3,4), '\\cdm_', strDateFolder)
+GrabLoc = paste0(NetworkLocation, 'cdm_', strDateFolder)
 GrabFiles = list.files(GrabLoc, full.names=TRUE, recursive=FALSE)
 
 ZipDir = paste0(MainDir, 'CDM\\', strDateFolder, '\\')
