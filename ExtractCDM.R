@@ -23,7 +23,7 @@ AcceptableSearchPatterns = 'd0|d1|d2|d3|d4'
 #Paths
 
 strCDMDir = paste0(MainDir, '\\CDM\\')
-strPtsTemplatePath = paste0(MainDir, '\\Misc\\PointLocations.csv')
+strPtsTemplatePath = paste0(MainDir, '\\Misc\\ForecastingPoints.csv')
 strOutputDir = paste0(MainDir,'\\Indices\\CDM_Previous\\', ForecastDate,'\\')
 
 NetworkLocation = '\\\\skyemci01-eo.efs.agr.gc.ca\\projects\\naisGis\\CDM\\Monthly_Shapefiles\\Final\\2021\\'
