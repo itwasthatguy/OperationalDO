@@ -101,7 +101,8 @@ for(i in 1:length(strShpFilesInt)){
   strShpFile = strShpFilesInt[i]
   ShpData = read_sf(strShpFile)
   ShpDataTF = st_transform(ShpData, st_crs(PtsTemplateGeo))
-  ShpIntersects = st_intersection(ShpDataTF, PtsTemplateGeo)
+  ShpDataTF_Buf = st_buffer(ShpDataTF, 0.25)
+  ShpIntersects = st_intersection(ShpDataTF_Buf, PtsTemplateGeo)
   
   intCDMVals[ShpIntersects$X] = i
 }
