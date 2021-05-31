@@ -7,21 +7,22 @@ library(parallel)
 library(doParallel)
 library(foreach)
 
-GridDir = 'E:\\GriddedWeather\\HalfGrid5015\\' #Location of your daily gridded data
+GridDir = 'D:\\Work\\AutomaticDO\\Historical\\HalfGrid5015\\' #Location of your daily gridded data
 
 HindDirPcp = array("", c(4))
-HindDirPcp[1] = 'F:\\AutomaticDO\\Historical\\PrecipHind\\1\\' #Location of hindcast data in CSV format - same format as the gridded data where 1 file =
-HindDirPcp[2] = 'F:\\AutomaticDO\\Historical\\PrecipHind\\2\\' #1 location.
-HindDirPcp[3] = 'F:\\AutomaticDO\\Historical\\PrecipHind\\3\\'
-HindDirPcp[4] = 'F:\\AutomaticDO\\Historical\\PrecipHind\\4\\'
+HindDirPcp[1] = 'D:\\Work\\AutomaticDO\\Historical\\PrecipHind\\1\\' #Location of hindcast data in CSV format - same format as the gridded data where 1 file =
+HindDirPcp[2] = 'D:\\Work\\AutomaticDO\\Historical\\PrecipHind\\2\\' #1 location.
+HindDirPcp[3] = 'D:\\Work\\AutomaticDO\\Historical\\PrecipHind\\3\\'
+HindDirPcp[4] = 'D:\\Work\\AutomaticDO\\Historical\\PrecipHind\\4\\'
 
 HindDirTmp = array("", c(4))
-HindDirTmp[1] = 'F:\\AutomaticDO\\Historical\\TempHind\\1\\'
-HindDirTmp[2] = 'F:\\AutomaticDO\\Historical\\TempHind\\2\\'
-HindDirTmp[3] = 'F:\\AutomaticDO\\Historical\\TempHind\\3\\'
-HindDirTmp[4] = 'F:\\AutomaticDO\\Historical\\TempHind\\4\\'
+HindDirTmp[1] = 'D:\\Work\\AutomaticDO\\Historical\\TempHind\\1\\'
+HindDirTmp[2] = 'D:\\Work\\AutomaticDO\\Historical\\TempHind\\2\\'
+HindDirTmp[3] = 'D:\\Work\\AutomaticDO\\Historical\\TempHind\\3\\'
+HindDirTmp[4] = 'D:\\Work\\AutomaticDO\\Historical\\TempHind\\4\\'
 
-OutCalDir = 'E:\\AutomaticDO\\Misc\\StatisticalTransforms\\'
+OutCalDir = 'D:\\Work\\AutomaticDO\\Misc\\StatisticalTransforms2\\'
+dir.create(OutCalDir)
 
 GridStart = as.Date('1950-01-01')   #There is no GridEnd because HindEnd comes first - we can just end there.
 
@@ -46,7 +47,7 @@ for(Day in 1:AllDaysGrid){
   MonthDaysGrid[[CurrentMonth]] = append(MonthDaysGrid[[CurrentMonth]], Day)
 }
 
-cl = makeCluster(20)			#If you for some reason have a 1 core cpu, this will cause problems. I suggest you get a better computer.
+cl = makeCluster(4)			#If you for some reason have a 1 core cpu, this will cause problems. I suggest you get a better computer.
 registerDoParallel(cl)
 
 AllMap = foreach(i=1:20)%dopar%{
@@ -88,7 +89,7 @@ AllMap = foreach(i=1:20)%dopar%{
     ObsTemp = GridData$TMax[GridFittingPeriod]
     ObsTemp = (ObsTemp + GridData$TMin[GridFittingPeriod])/2
     
-    MonthsMap = array(0, c(60, 101))
+    MonthsMap = array(0, c(12*7, 101))
     
     for(Month in 1:12){
       ObsMonth = ObsPrecip[MonthDaysGrid[[Month]]]
@@ -106,11 +107,12 @@ AllMap = foreach(i=1:20)%dopar%{
       HindMonthCombine[which(HindMonthCombine < 0)] = 0
       ObsMonth = as.vector(ObsMonth)
       
-      Map = fitQmapQUANT(ObsMonth, HindMonthCombine, qstep=0.01, wet.day=TRUE, nboot=1)
+      Map = fitQmapRQUANT(ObsMonth, HindMonthCombine, qstep=0.01, wet.day=TRUE, nboot=1)
       
-      MonthsMap[((Month-1)*5) + 1,] = Map$wet.day
-      MonthsMap[((Month-1)*5) + 2,] =  Map$par$modq
-      MonthsMap[((Month-1)*5) + 3,] =  Map$par$fitq
+      MonthsMap[((Month-1)*7) + 1,] = Map$wet.day
+      MonthsMap[((Month-1)*7) + 2,] =  Map$par$modq
+      MonthsMap[((Month-1)*7) + 3,] =  Map$par$fitq
+      MonthsMap[((Month-1)*7) + 4,1:2] =  Map$par$slope
       
       ObsMonth = ObsTemp[MonthDaysGrid[[Month]]]
       HindMonth = HindData[MonthDaysHind[[Month]], 5:8] - 273.15
@@ -127,10 +129,11 @@ AllMap = foreach(i=1:20)%dopar%{
       ObsMonth = as.data.frame(ObsMonth)
       
       
-      Map = fitQmapQUANT(ObsMonth, HindMonthCombine, qstep=0.01, wet.day=FALSE, nboot=1)
+      Map = fitQmapRQUANT(ObsMonth, HindMonthCombine, qstep=0.01, wet.day=FALSE, nboot=1)
       
-      MonthsMap[((Month-1)*5) + 4,] =  Map$par$modq
-      MonthsMap[((Month-1)*5) + 5,] =  Map$par$fitq
+      MonthsMap[((Month-1)*7) + 5,] =  Map$par$modq
+      MonthsMap[((Month-1)*7) + 6,] =  Map$par$fitq
+      MonthsMap[((Month-1)*7) + 7,1:2] =  Map$par$slope
       
     }
     

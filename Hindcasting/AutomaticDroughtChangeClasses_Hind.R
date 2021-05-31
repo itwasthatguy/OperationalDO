@@ -3,7 +3,11 @@
 Date = as.Date(commandArgs(trailingOnly = TRUE)[2])
 MainDir = paste0(commandArgs(trailingOnly = TRUE)[3], '\\')
 
-OutputFile = paste0(MainDir, 'Outcomes\\ResultsClasses', Date, '.csv')
+OutputFile = paste0(MainDir, 'Outcomes\\ResultsClasses', Date, '_Hind.csv')
+OutputFileMasked = paste0(MainDir, 'Outcomes\\ResultsClasses_Masked', Date, '_Hind.csv')
+
+#### TEMPORARY FILE FOR MASKING OUT MOUNTAIN AREA DROUGHT
+Mask = read_sf(paste0(MainDir, 'Misc\\Masking\\Test_Mask.shp'))
 
 ClassMainDir = paste0(MainDir, 'Outcomes\\Classifications\\')
 PrevMainDir = paste0(MainDir, 'Outcomes\\Prior\\')
@@ -70,7 +74,6 @@ DroughtToClear = intersect(which(ChanceDrought < 0.5), which(PreviousStates >= 1
 #Use ChanceDrought and ChanceNoDrought as the confidence values for ClearToDrought and DroughtToClear
 #For DroughtToDrought, we want to sum probabilities that are lower, equal, and higher than PreviousStates
 
-
 Confidences = vector(mode='numeric', length=length(PreviousStates))
 
 #Confidence for all but drought to drought can just be the chance that it ends up in that category.
@@ -105,12 +108,20 @@ for(ChangeDrought in DroughtToDrought){
   Direction = which.max(c(DownChange, SameChance, UpChance))    #1 for lower, 2 for same, 3 for higher
   Conf = max(c(DownChange, SameChance, UpChance))               #And confidence of it
   
-  OutputClasses[ChangeDrought,3] = Direction + 2
-  OutputClasses[ChangeDrought,4] = Conf
+  if(Direction == 1){ #Reduction
+    OutputClasses[ChangeDrought,3] = 2
+    OutputClasses[ChangeDrought,4] = Conf
+  } else if(Direction == 2){ #Reduction
+    OutputClasses[ChangeDrought,3] = 4
+    OutputClasses[ChangeDrought,4] = Conf
+  } else if(Direction == 3){ #Reduction
+    OutputClasses[ChangeDrought,3] = 5
+    OutputClasses[ChangeDrought,4] = Conf
+  }
   
 }
 
-OutputClasses[ClearToDrought,3] = 2
+OutputClasses[ClearToDrought,3] = 3
 OutputClasses[ClearToDrought,4] = Confidences[ClearToDrought]
 
 OutputClasses[DroughtToClear,3] = 1
@@ -126,6 +137,8 @@ for(Conf in seq(0.5, 1, 0.05)){
   for(Loc in 1:length(PreviousStates)){
     if(OutputClasses[Loc,4] >= Conf){
       ConditionalClass = c(ConditionalClass, OutputClasses[Loc,3])
+    } else if(OutputClasses[Loc,3] %in% c(1,2,4,5)){
+      ConditionalClass = c(ConditionalClass, 4)
     } else {
       ConditionalClass = c(ConditionalClass, 6)
     }
@@ -139,5 +152,38 @@ for(Conf in seq(0.5, 1, 0.05)){
 OutputClassesThresh = cbind(OutputClasses, ConfThresh)
 
 colnames(OutputClassesThresh) = c('Lat', 'Lon', 'Class', 'Confidence', '50%', '55%', '60%', '65%', '70%', '75%', '80%', '85%', '90%', '95%', '100%')
+
+####### Begin masking out areas marked by the shapefile ######
+
+OutPoints = OutputClassesThresh
+OutPoints[,2] = -360 + OutPoints[,2]
+
+XMx = max(OutPoints[,2]) + 0.25
+XMn = min(OutPoints[,2]) - 0.25
+YMx = max(OutPoints[,1]) + 0.25
+YMn = min(OutPoints[,1]) - 0.25
+
+Xrng = ((XMx - XMn) * 2)
+Yrng = ((YMx - YMn) * 2)
+
+OutPoints = as.data.frame(OutPoints)
+OutPoints = st_as_sf(OutPoints, coords =c('Lon', 'Lat'), crs=4326)   #Coords are x, y 102008
+
+Mask = st_transform(Mask, st_crs(OutPoints))
+MaskOut = st_intersection(OutPoints, Mask)
+IndexLocs = as.integer(rownames(MaskOut))
+PointDataMask = OutPoints[IndexLocs,]
+
+PointDataMask[which(PointDataMask$Class == 3),c(1, 3:13)] = 0
+PointDataMask[which(PointDataMask$Class %in% c(1,2,4,5)),c(1, 3:13)] = 4
+
+OutPoints[IndexLocs,] = PointDataMask
+OutputClassesThreshTest = as.data.frame(OutPoints)[,1:13]
+OutCoords = st_coordinates(OutPoints)
+OutCoords[,1] = OutCoords[,1] + 360
+OutputClassesThreshTest = cbind(OutCoords[,2], OutCoords[,1], OutputClassesThreshTest)
+colnames(OutputClassesThreshTest) = c('Lat', 'Lon', 'Class', 'Confidence', '50%', '55%', '60%', '65%', '70%', '75%', '80%', '85%', '90%', '95%', '100%')
+
+write.csv(OutputClassesThresh, OutputFile, quote = FALSE, row.names = FALSE)
 
 write.csv(OutputClassesThresh, OutputFile, quote = FALSE, row.names = FALSE)

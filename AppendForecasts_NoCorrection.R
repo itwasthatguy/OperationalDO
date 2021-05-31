@@ -46,7 +46,7 @@ TotalDays = as.integer(LongForecastEnd - ShortForecastStart) + 1      #Total num
 ShortForecastFiles = list.files(ShortForecastDir)
 LongForecastFiles = list.files(LongForecastDir)
 
-TransformDir = paste0(MainDir, 'Misc\\StatisticalTransforms\\')    #Pre-calibrated transforms to ensure our forecasts match the grid.
+TransformDir = paste0(MainDir, 'Misc\\QM_GPD_Transforms\\')    #Pre-calibrated transforms to ensure our forecasts match the grid.
 TransformFiles = list.files(TransformDir)
 
 FormatFiles = intersect(TransformFiles, ShortForecastFiles)
@@ -115,7 +115,7 @@ foreach(j = 1:40) %dopar%{      #Break the data up into 40 chunks and have a cor
     colnames(TransformData) = NULL
     TransformData = as.matrix(TransformData)
     
-    for(Member in 1:1) {                #We'll want to go through for each member and create an independent forecast
+    for(Member in 1:21) {                #We'll want to go through for each member and create an independent forecast
       
       if(!exists(paste(OutDir, Member - 1, '\\', sep=''))) dir.create(paste(OutDir, Member - 1, '\\', sep=''))
       OutFile = paste(OutDir, Member - 1, '\\', ShortForecast, sep='')  #Last directory and file name for output
@@ -161,19 +161,17 @@ foreach(j = 1:40) %dopar%{      #Break the data up into 40 chunks and have a cor
       
       MonthGroups = c('01','02','03','04','05','06','07','08','09','10','11','12')
       for(Month in MonthGroups){
-        MonthOffset = (as.integer(Month) - 1) * 7
+        MonthOffset = (as.integer(Month) - 1) * 6
         InMonth = MonthDays[Month][[1]]
         
         PrecipMap$wet.day = TransformData[MonthOffset + 1,1]
-        PrecipMap$par$modq[,1] = TransformData[MonthOffset + 2,]
-        PrecipMap$par$fitq[,1] = TransformData[MonthOffset + 3,]
-        PrecipMap$par$slope[,1] = TransformData[MonthOffset + 4,1:2]
         TempMap$wet.day = NULL
         
+        PrecipMap$par$modq[,1] = TransformData[MonthOffset + 2,]
+        TempMap$par$modq[,1] = TransformData[MonthOffset + 4,]
         
-        TempMap$par$modq[,1] = TransformData[MonthOffset + 5,]
-        TempMap$par$fitq[,1] = TransformData[MonthOffset + 6,]
-        TempMap$par$slope[,1] = TransformData[MonthOffset + 7,1:2]
+        PrecipMap$par$fitq[,1] = TransformData[MonthOffset + 3,]
+        TempMap$par$fitq[,1] = TransformData[MonthOffset + 5,]
         
         ForecastTMean = (CombinedForecast[InMonth,2] + CombinedForecast[InMonth,3])/2
         ForecastRange = (CombinedForecast[InMonth,2] - CombinedForecast[InMonth,3]) / 2
@@ -181,11 +179,26 @@ foreach(j = 1:40) %dopar%{      #Break the data up into 40 chunks and have a cor
         PreTF_Precip = CombinedForecast[InMonth,1]
         
         PrecipTransformed = rep(0, length(PreTF_Precip))
-        PrecipTransformed = doQmap(PreTF_Precip, PrecipMap)
+        PrecipTransformed = PreTF_Precip
+        
+        ParetoParams = TransformData[MonthOffset + 6,1:4]
+        shape = ParetoParams[1]
+        scale = ParetoParams[2]
+        mshape = ParetoParams[3]
+        mscale = ParetoParams[4]
+        
+        ExtremeVals = c()
+        for(Val in PreTF_Precip[which(PreTF_Precip > qs(PreTF_Precip)[190])]){
+          Probability = 1 - ((((mshape * Val)/mscale) + 1)^(-1/mshape))
+          CorrectedVal = -1 * (scale * (((1-Probability)^shape) - 1) * (1 - Probability)^(-1 * shape)) / shape
+          ExtremeVals = c(ExtremeVals, CorrectedVal)
+        }
+        
+        PrecipTransformed = PreTF_Precip
         
         CombinedForecast[InMonth,1] = PrecipTransformed
         
-        TempTransformed = doQmap(ForecastTMean, TempMap)
+        TempTransformed = ForecastTMean
         
         CombinedForecast[InMonth,2] = TempTransformed + ForecastRange
         CombinedForecast[InMonth,3] = TempTransformed - ForecastRange
