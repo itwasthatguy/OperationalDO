@@ -61,15 +61,16 @@ IndicatorsOutput = paste0(MainDirectory, 'Indices\\EnsembleMeans\\', ForecastDat
 
 if(!dir.exists(paste0(MainDirectory, 'Indices\\EnsembleMeans\\'))) dir.create(paste0(MainDirectory, 'Indices\\EnsembleMeans\\'))
 
-#SPIForecastDir0 = paste0(SPIForecastDir, '0', '\\')
-#SPEIForecastDir0 = paste0(SPEIForecastDir, '0', '\\')
-#SPIFormatFiles = list.files(SPIForecastDir0)
-#SPEIFormatFiles = list.files(SPEIForecastDir0)
+SPIForecastDir0 = paste0(SPIForecastDir, '0', '\\')
+SPEIForecastDir0 = paste0(SPEIForecastDir, '0', '\\')
+SPIFormatFiles = list.files(SPIForecastDir0)
+SPEIFormatFiles = list.files(SPEIForecastDir0)
 
-#IntFiles = intersect(SPIFormatFiles, SPEIFormatFiles)     #Every index of both forecast types will have these locations
-
-IntFiles = read.csv(paste0(MainDirectory, '\\Misc\\PointLocations.csv'))
+IntFiles = read.csv(paste0(MainDirectory, '\\Misc\\ForecastingPoints.csv'))
 IntFiles= paste0(IntFiles[,1], '_', IntFiles[,2], '.csv')
+IntFiles = intersect(IntFiles, SPEIFormatFiles)
+IntFiles = intersect(IntFiles, SPIFormatFiles) 
+
 
 
 PredictArray = array(0, c(21, length(IntFiles), IndexCount))    #The 21 is for the 21 ensemble members
@@ -273,7 +274,7 @@ Counter = 1
 
 for(Mem in 1:21){
   DataArray = PredictArray[Mem,,]
-  DataArray = DataArray[which(DataArray[,37] %in% ClassifyGroup),]
+  #DataArray = DataArray[which(DataArray[,37] %in% ClassifyGroup),]
   class(DataArray) = 'numeric'
   
   XPredict = as.array(DataArray[,c(4:29,31)])
