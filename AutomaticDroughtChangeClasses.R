@@ -6,8 +6,7 @@ MainDir = paste0(commandArgs(trailingOnly = TRUE)[3], '\\')
 OutputFile = paste0(MainDir, 'Outcomes\\ResultsClasses', Date, '.csv')
 OutputFileMasked = paste0(MainDir, 'Outcomes\\ResultsClasses_Masked', Date, '.csv')
 
-#### TEMPORARY FILE FOR MASKING OUT MOUNTAIN AREA DROUGHT
-Mask = read_sf(paste0(MainDir, 'Misc\\Masking\\Test_Mask.shp'))
+MaskPointsFile = paste0(MainDir, 'Misc\\PointsToMaskOut.csv')
 
 ClassMainDir = paste0(MainDir, 'Outcomes\\Classifications\\')
 PrevMainDir = paste0(MainDir, 'Outcomes\\Prior\\')
@@ -107,6 +106,11 @@ for(ChangeDrought in DroughtToDrought){
   
   SameChance = length(which(Droughts %in% Same))/21
   Direction = which.max(c(DownChange, SameChance, UpChance))    #1 for lower, 2 for same, 3 for higher
+  
+  if(DownChange == SameChance){   #In a tie between reduction and maintaining, favour maintaining
+    Direction = 2                 #This prevents drought reduction from a d1 if p(d1|d1) = p(< d1|d1)
+  }
+  
   Conf = max(c(DownChange, SameChance, UpChance))               #And confidence of it
   
   if(Direction == 1){ #Reduction
@@ -155,36 +159,28 @@ OutputClassesThresh = cbind(OutputClasses, ConfThresh)
 colnames(OutputClassesThresh) = c('Lat', 'Lon', 'Class', 'Confidence', '50%', '55%', '60%', '65%', '70%', '75%', '80%', '85%', '90%', '95%', '100%')
 
 
-####### Begin masking out areas marked by the shapefile ######
+####### Masking #######
+
+#Instead of actually using a mask, we pre-set points in a csv file to be "masked out"
 
 OutPoints = OutputClassesThresh
-OutPoints[,2] = -360 + OutPoints[,2]
+MaskPoints = read.csv(MaskPointsFile)
 
-XMx = max(OutPoints[,2]) + 0.25
-XMn = min(OutPoints[,2]) - 0.25
-YMx = max(OutPoints[,1]) + 0.25
-YMn = min(OutPoints[,1]) - 0.25
+for(MaskPointCount in 1:dim(MaskPoints)[1]){
+  PointPos = intersect(which(OutPoints[,1] == MaskPoints[MaskPointCount,1]), which(OutPoints[,2] == MaskPoints[MaskPointCount,2]))
+  
+  if(length(PointPos) == 0){   #Not in the frame - add it to the end as class 6 with conf 0
+    OutRow = c(MaskPoints[MaskPointCount,1], MaskPoints[MaskPointCount,2], 6, 0, rep(6, 11))
+    OutPoints = rbind(OutPoints, OutRow)
+  } else {
+    OutPoints[PointPos, c(3, 5:15)] = 6
+    OutPoints[PointPos, 4] = 0
+  }
+  
+}
 
-Xrng = ((XMx - XMn) * 2)
-Yrng = ((YMx - YMn) * 2)
-
-OutPoints = as.data.frame(OutPoints)
-OutPoints = st_as_sf(OutPoints, coords =c('Lon', 'Lat'), crs=4326)   #Coords are x, y 102008
-
-Mask = st_transform(Mask, st_crs(OutPoints))
-MaskOut = st_intersection(OutPoints, Mask)
-IndexLocs = as.integer(rownames(MaskOut))
-PointDataMask = OutPoints[IndexLocs,]
-
-PointDataMask[which(PointDataMask$Class == 3),c(1, 3:13)] = 0
-PointDataMask[which(PointDataMask$Class %in% c(1,2,4,5)),c(1, 3:13)] = 4
-
-OutPoints[IndexLocs,] = PointDataMask
-OutputClassesThreshTest = as.data.frame(OutPoints)[,1:13]
-OutCoords = st_coordinates(OutPoints)
-OutCoords[,1] = OutCoords[,1] + 360
-OutputClassesThreshTest = cbind(OutCoords[,2], OutCoords[,1], OutputClassesThreshTest)
-colnames(OutputClassesThreshTest) = c('Lat', 'Lon', 'Class', 'Confidence', '50%', '55%', '60%', '65%', '70%', '75%', '80%', '85%', '90%', '95%', '100%')
+OutputClassesThreshMask = OutPoints
+colnames(OutputClassesThreshMask) = c('Lat', 'Lon', 'Class', 'Confidence', '50%', '55%', '60%', '65%', '70%', '75%', '80%', '85%', '90%', '95%', '100%')
 
 write.csv(OutputClassesThresh, OutputFile, quote = FALSE, row.names = FALSE)
-write.csv(OutputClassesThreshTest, OutputFileMasked, quote = FALSE, row.names = FALSE)
+write.csv(OutputClassesThreshMask, OutputFileMasked, quote = FALSE, row.names = FALSE)
