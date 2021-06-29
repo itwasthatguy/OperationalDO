@@ -186,42 +186,29 @@ Len2 = length(which(TrainMatZone1[,30] == 2))#19943
 Len1 = length(which(TrainMatZone1[,30] == 1))#43502
 Len0 = length(which(TrainMatZone1[,30] == 0))#36715
 
-Len5c = length(which(TrainMatChange2[,30] == 5))#826
-Len4c = length(which(TrainMatChange2[,30] == 4))#4484
-Len3c = length(which(TrainMatChange2[,30] == 3))#9443
-Len2c = length(which(TrainMatChange2[,30] == 2))#19943
-Len1c = length(which(TrainMatChange2[,30] == 1))#43502
-Len0c = length(which(TrainMatChange2[,30] == 0))#36715
-
-Len5n = length(which(TrainMatChangeNot2[,30] == 5))#826
-Len4n = length(which(TrainMatChangeNot2[,30] == 4))#4484
-Len3n = length(which(TrainMatChangeNot2[,30] == 3))#9443
-Len2n = length(which(TrainMatChangeNot2[,30] == 2))#19943
-Len1n = length(which(TrainMatChangeNot2[,30] == 1))#43502
-Len0n = length(which(TrainMatChangeNot2[,30] == 0))#36715
+Len5c = length(which(TrainMatZone2[,30] == 5))#826
+Len4c = length(which(TrainMatZone2[,30] == 4))#4484
+Len3c = length(which(TrainMatZone2[,30] == 3))#9443
+Len2c = length(which(TrainMatZone2[,30] == 2))#19943
+Len1c = length(which(TrainMatZone2[,30] == 1))#43502
+Len0c = length(which(TrainMatZone2[,30] == 0))#36715
 
 SubSampleMat = c()
 
-SubSampleMat = TrainMatZone1[sample(which(TrainMatZone1[,30] == 5), size = Len5 * 0.6, replace = FALSE),]
-SubSampleMat = rbind(SubSampleMat, TrainMatZone1[sample(which(TrainMatZone1[,30] == 4), size = Len4 * 0.7, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatZone1[sample(which(TrainMatZone1[,30] == 3), size = Len3 * 0.8, replace = FALSE),])
+SubSampleMat = TrainMatZone1[sample(which(TrainMatZone1[,30] == 5), size = Len5 * 0.4, replace = FALSE),]
+SubSampleMat = rbind(SubSampleMat, TrainMatZone1[sample(which(TrainMatZone1[,30] == 4), size = Len4 * 0.5, replace = FALSE),])
+SubSampleMat = rbind(SubSampleMat, TrainMatZone1[sample(which(TrainMatZone1[,30] == 3), size = Len3 * 0.6, replace = FALSE),])
 SubSampleMat = rbind(SubSampleMat, TrainMatZone1[sample(which(TrainMatZone1[,30] == 2), size = Len2 * 0.8, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatZone1[sample(which(TrainMatZone1[,30] == 1), size = Len1 * 1, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatZone1[sample(which(TrainMatZone1[,30] == 0), size = Len0 * 1, replace = FALSE),])
+SubSampleMat = rbind(SubSampleMat, TrainMatZone1[sample(which(TrainMatZone1[,30] == 1), size = Len1 * 0.8, replace = FALSE),])
+SubSampleMat = rbind(SubSampleMat, TrainMatZone1[sample(which(TrainMatZone1[,30] == 0), size = Len0 * 0.8, replace = FALSE),])
 
-SubSampleMat = rbind(SubSampleMat, TrainMatChange2[sample(which(TrainMatChange2[,30] == 5), size = Len5c * 1, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChange2[sample(which(TrainMatChange2[,30] == 4), size = Len4c * 1, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChange2[sample(which(TrainMatChange2[,30] == 3), size = Len3c * 1, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChange2[sample(which(TrainMatChange2[,30] == 2), size = Len2c * 1, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChange2[sample(which(TrainMatChange2[,30] == 1), size = Len1c * 0.2, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChange2[sample(which(TrainMatChange2[,30] == 0), size = Len0c * 0.2, replace = FALSE),])
+SubSampleMat = rbind(SubSampleMat, TrainMatZone2[sample(which(TrainMatZone2[,30] == 5), size = Len5c * 0.2, replace = FALSE),])
+SubSampleMat = rbind(SubSampleMat, TrainMatZone2[sample(which(TrainMatZone2[,30] == 4), size = Len4c * 0.2, replace = FALSE),])
+SubSampleMat = rbind(SubSampleMat, TrainMatZone2[sample(which(TrainMatZone2[,30] == 3), size = Len3c * 0.2, replace = FALSE),])
+SubSampleMat = rbind(SubSampleMat, TrainMatZone2[sample(which(TrainMatZone2[,30] == 2), size = Len2c * 0.2, replace = FALSE),])
+SubSampleMat = rbind(SubSampleMat, TrainMatZone2[sample(which(TrainMatZone2[,30] == 1), size = Len1c * 0.04, replace = FALSE),])
+SubSampleMat = rbind(SubSampleMat, TrainMatZone2[sample(which(TrainMatZone2[,30] == 0), size = Len0c * 0.04, replace = FALSE),])
 
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot2[sample(which(TrainMatChangeNot2[,30] == 5), size = Len5n * 0.25, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot2[sample(which(TrainMatChangeNot2[,30] == 4), size = Len4n * 0.25, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot2[sample(which(TrainMatChangeNot2[,30] == 3), size = Len3n * 0.2, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot2[sample(which(TrainMatChangeNot2[,30] == 2), size = Len2n * 0.2, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot2[sample(which(TrainMatChangeNot2[,30] == 1), size = Len1n * 0.03, replace = FALSE),])
-SubSampleMat = rbind(SubSampleMat, TrainMatChangeNot2[sample(which(TrainMatChangeNot2[,30] == 0), size = Len0 * 0.03, replace = FALSE),])
 #attr(TrainMatZone, 'dimnames') = NULL
 attr(SubSampleMat, 'dimnames') = NULL
 
