@@ -271,7 +271,7 @@ model %>% compile(
 history = model %>% fit(
   Input, YTrain,
   batch_size = 512,#512
-  epochs = 60,
+  epochs = 40,
   validation_split = 0.02
 )
 
