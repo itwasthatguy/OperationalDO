@@ -55,7 +55,7 @@ REM This process will automatically download the previous month's CDM. It then r
 
 REM This process will classify the upcoming drought based on the indices calculated by previous steps
 
-"C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/AutomaticClassification.R --args !StartDate! !MainDir!
+"C:/Program Files/R/R-4.0.2/bin/x64/Rscript" !MainDir!/Processes/AutomaticClassification2.R --args !StartDate! !MainDir!
 
 REM This process assigns change classes based on the *direction* of drought change
 
